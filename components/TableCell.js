@@ -1,91 +1,116 @@
-import React, { PropTypes } from 'react'
+import React, { Component, PropTypes } from 'react'
 
-const TableCell = ({
-    cell,
-    onSetCellValue
-}) => (
-    <div className="tableCell" style={{
-        display: 'table-cell',
-        height: 30,
-        padding: '0 5px',
-        border: '1px solid #ccc',
-        borderTop: 'none',
-        borderRight: 'none',
-        boxSizing: 'border-box',
-        overflow: 'hidden'
-    }}>
-        <input 
-            onChange={e => {
-                onSetCellValue(cell.rowIdx, cell.colIdx, e.target.value)
-            }}
-            onPaste={e => {
+export default class TableCell extends Component {
 
-                // Do not paste input into cell
-                e.preventDefault()
+    constructor (props) {
+        super(props)
+    }
 
-                // Clipboard data in HTML to support all formating options
-                const pasteData = e.clipboardData.getData('text/html')
-        
-                // Pseudo DOM element 
-                const el = document.createElement('html')
+    shouldComponentUpdate (nextProps) {
 
-                // Virtual DOM of our paste data
-                el.innerHTML = pasteData
+        if (this.props.cell.value === nextProps.cell.value) {
+            return false
+        }
 
-                // Extract table
-                var table = el.getElementsByTagName('table')
-             
-                if (table.length === 0) {
-                    console.error('no table found :/')
-                    return
-                }
+        return true
+    }
+
+    render () {
+
+        const {
+            cell,
+            onSetCellValue
+        } = this.props
+    
+        return (
+            <div className="tableCell" style={{
+                width: 120,
+                height: 30,
+                verticalAlign: 'middle',
+                backgroundColor: 'white',
+                border: '1px solid #ccc',
+                borderTop: 'none',
+                borderLeft: 'none',
+                display: 'inline-block',
+                boxSizing: 'border-box',
+                textAlign: 'center',
+                lineHeight: '30px',
+                color: '#444',
+                fontSize: '0.8em'
+            }}>
+                <input 
+                    onChange={e => onSetCellValue(
+                        cell.rowIdx, cell.colIdx, e.target.value
+                    )}
+                    onPaste={e => {
+
+                        // Do not paste input into cell
+                        e.preventDefault()
+
+                        // Clipboard data in HTML to support all formating options
+                        const pasteData = e.clipboardData.getData('text/html')
                 
-                var tableRows = table[0].querySelectorAll('tr')
-                
-                if (tableRows.length === 0) {
-                    console.error('no table rows found :/')
-                    return
-                }
+                        // Pseudo DOM element 
+                        const el = document.createElement('html')
 
-                // Start row
-                var rowNum = cell.rowIdx
+                        // Virtual DOM of our paste data
+                        el.innerHTML = pasteData
 
-                // Iterate over table rows 
-                tableRows.forEach(function (row) {
-            
-                    // Start col
-                    var colNum = cell.colIdx
-                    var cols = row.querySelectorAll('td')
-              
-                    // Iterate over cols
-                    cols.forEach(function (col) {
-              
-                        var re = /<[a-zA-Z0-9\/\s\"\-\;\=\:]+>/g
+                        // Extract table
+                        var table = el.getElementsByTagName('table')
+                     
+                        if (table.length === 0) {
+                            console.error('no table found :/')
+                            return
+                        }
+                        
+                        var tableRows = table[0].querySelectorAll('tr')
+                        
+                        if (tableRows.length === 0) {
+                            console.error('no table rows found :/')
+                            return
+                        }
 
-                        // Strip HTML from column data
-                        var colData = col.innerHTML.replace(re, '')
+                        // Start row
+                        var rowNum = cell.rowIdx
 
-                        onSetCellValue(rowNum, colNum, colData)
+                        // Iterate over table rows 
+                        tableRows.forEach(function (row) {
+                    
+                            // Start col
+                            var colNum = cell.colIdx
+                            var cols = row.querySelectorAll('td')
+                      
+                            // Iterate over cols
+                            cols.forEach(function (col) {
+                      
+                                var re = /<[a-zA-Z0-9\/\s\"\-\;\=\:]+>/g
 
-                        colNum += 1
-                    })
-              
-                    rowNum += 1
-                }) 
-            }}
-            style={{
-                border: 'none',
-                width: '100%',
-                height: 30
-            }}
-            type="text" 
-            value={cell.value} />
-    </div>
-)
+                                // Strip HTML from column data
+                                var colData = col.innerHTML.replace(re, '')
+
+                                onSetCellValue(rowNum, colNum, colData)
+
+                                colNum += 1
+                            })
+                      
+                            rowNum += 1
+                        }) 
+                    }}
+                    style={{
+                        border: 'none',
+                        width: '100%',
+                        height: 30,
+                        backgroundColor: 'transparent'
+                    }}
+                    type="text" 
+                    value={cell.value} />
+            </div>
+        )
+    }
+}
 
 TableCell.propTypes = {
     cell: PropTypes.object.isRequired,
     onSetCellValue: PropTypes.func.isRequired
 }
-
-export default TableCell

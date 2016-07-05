@@ -1,9 +1,48 @@
 body {
     margin: 0;
     padding: 0;
+    overflow: hidden;
     font-family: arial, sans-serif;
 }
 button:focus,
 input:focus {
     outline: none;
+}
+
+/* Layout */
+.row, .column {
+    overflow: hidden;
+    position: absolute;
+}
+.row {
+    left: 0;
+    right: 0;
+}
+.column {
+    top: 0;
+    bottom: 0;
+}
+.scrollX, .scrollY {
+    -webkit-overflow-scrolling: touch;
+}
+.scrollX {
+    overflow-x: auto;
+}
+.scrollY {
+    overflow-y: auto;
+}
+.header {
+    height: 30px;
+    top: 0;
+}
+.body {
+    top: 30px;
+    bottom: 0;
+}
+.columnLeft {
+    width: 50px;
+    left: 0;
+}
+.columnRight {
+    left: 50px;right: 0;
 }

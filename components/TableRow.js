@@ -5,19 +5,23 @@ const TableRow = ({
     onSetCellValue,
     row
 }) => (
-    <div className="tableRow" style={{
-        display: 'table-row',
+    <div style={{
         height: 30
     }}>
         <div style={{ 
-            display: 'table-cell', 
             width: 50,
+            height: 30,
+            display: 'inline-block',
+            verticalAlign: 'middle',
+            border: '1px solid #ccc',
+            borderTop: 'none',
+            borderLeft: 'none',
+            boxSizing: 'border-box',
             backgroundColor: '#efefef',
-            borderBottom: '1px solid #ccc',
             textAlign: 'center',
-            color: '#777',
             lineHeight: '30px',
-            fontSize: '0.6em'
+            fontSize: '0.8em',
+            color: '#444'
         }}>
             {row.rowIdx + 1}
         </div>

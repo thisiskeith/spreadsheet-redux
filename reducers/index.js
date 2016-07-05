@@ -4,9 +4,17 @@ import {
     SET_CELL_VALUE 
 } from '../actions'
 
+const defaultRowLen = 50
+const defaultRows = new Array(defaultRowLen)
 const emptyRow = ['', '', '', '', '', '', '', '', '', '']
+let i = 0
 
-const spreadsheetData = (state = [emptyRow], action) => {
+while (i < defaultRowLen) {
+    defaultRows[i] = emptyRow.slice()
+    i += 1
+}
+
+const spreadsheetData = (state = defaultRows, action) => {
 
     switch (action.type) {
 
@@ -28,7 +36,7 @@ const spreadsheetData = (state = [emptyRow], action) => {
             let i = 0
 
             for (; i < rowsDelta; i += 1) {
-                state.push(emptyRow)
+                state.push(emptyRow.slice())
             }
         }
 
