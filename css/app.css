@@ -32,12 +32,14 @@ input:focus {
     overflow-y: auto;
 }
 .header {
-    height: 30px;
+    height: 60px;
     top: 0;
+    background-color: white;
 }
 .body {
-    top: 30px;
+    top: 60px;
     bottom: 0;
+    background-color: magenta;
 }
 .columnLeft {
     width: 50px;
@@ -45,4 +47,37 @@ input:focus {
 }
 .columnRight {
     left: 50px;right: 0;
+}
+
+/* Spreadsheet scrollbars for Chrome, Safari */
+.waffle-iron::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+}
+.waffle-iron::-webkit-scrollbar-track {
+    background-color: #f3f3f3;
+
+}
+.waffle-iron::-webkit-scrollbar-thumb:vertical,
+.waffle-iron::-webkit-scrollbar-thumb:horizontal {
+    background-color: #ccc;
+    border: 2px solid #f3f3f3;
+}
+.waffle-iron::-webkit-scrollbar-thumb:vertical:hover,
+.waffle-iron::-webkit-scrollbar-thumb:horizontal:hover {
+    background: #3896ff;
+}
+.waffle-iron::-webkit-scrollbar-thumb:horizontal {
+    background-color: rgba(0,0,0,.2);
+
+}
+.waffle-iron::-webkit-scrollbar-corner {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Layout x-browser */
+.maxContent {
+    width: intrinsic;
+    width: -moz-max-content;
+    width: -webkit-max-content;
 }

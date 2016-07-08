@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux'
 import { 
     ADD_ROW,
+    SET_CELL_FOCUS,
     SET_CELL_VALUE 
 } from '../actions'
 
@@ -14,20 +15,27 @@ while (i < defaultRowLen) {
     i += 1
 }
 
-const spreadsheetData = (state = defaultRows, action) => {
+const spreadsheetData = (state = {
+    rows: defaultRows
+}, action) => {
 
     switch (action.type) {
 
     case ADD_ROW:
-        return [
-            ...state,
-            emptyRow
-        ]
+        return Object.assign({}, state, {
+            rows: [
+                ...state,
+                emptyRow
+            ]
+        })
+
+    case SET_CELL_FOCUS:
+        return state
 
     case SET_CELL_VALUE:
 
         const { cellIdx, rowIdx, value } = action
-        const rowsLen = state.length
+        const rowsLen = state.rows.length
         const rowsDelta = rowIdx - (rowsLen - 1)
 
         // Add additional rows
@@ -36,20 +44,22 @@ const spreadsheetData = (state = defaultRows, action) => {
             let i = 0
 
             for (; i < rowsDelta; i += 1) {
-                state.push(emptyRow.slice())
+                state.rows.push(emptyRow.slice())
             }
         }
 
-        return state.map((row, i) => {
-            if (rowIdx === i) {
-                return row.map((cell, j) => {
-                    if (cellIdx === j) {
-                        return value
-                    }
-                    return cell
-                })
-            }
-            return row
+        return Object.assign({}, state, {
+            rows: state.rows.map((row, i) => {
+                if (rowIdx === i) {
+                    return row.map((cell, j) => {
+                        if (cellIdx === j) {
+                            return value
+                        }
+                        return cell
+                    })
+                }
+                return row
+            })
         })
         
     default:

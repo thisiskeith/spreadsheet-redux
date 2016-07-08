@@ -1,5 +1,15 @@
 import React, { Component, PropTypes } from 'react'
 
+const style = {
+    td: {
+        width: 200,
+        height: 30,
+        border: '1px solid #dadada',
+        fontSize: '12px',
+        padding: 0
+    }
+}
+
 export default class TableCell extends Component {
 
     constructor (props) {
@@ -23,21 +33,11 @@ export default class TableCell extends Component {
         } = this.props
     
         return (
-            <div className="tableCell" style={{
-                width: 120,
-                height: 30,
-                verticalAlign: 'middle',
-                backgroundColor: 'white',
-                border: '1px solid #ccc',
-                borderTop: 'none',
-                borderLeft: 'none',
-                display: 'inline-block',
-                boxSizing: 'border-box',
-                textAlign: 'center',
-                lineHeight: '30px',
-                color: '#444',
-                fontSize: '0.8em'
-            }}>
+            <td
+                style={Object.assign({}, style.td, {
+                    backgroundColor: 'white'
+                 })}
+            >
                 <input 
                     onChange={e => onSetCellValue(
                         cell.rowIdx, cell.colIdx, e.target.value
@@ -101,11 +101,12 @@ export default class TableCell extends Component {
                         border: 'none',
                         width: '100%',
                         height: 30,
+                        padding: 0,
                         backgroundColor: 'transparent'
                     }}
                     type="text" 
                     value={cell.value} />
-            </div>
+            </td>
         )
     }
 }

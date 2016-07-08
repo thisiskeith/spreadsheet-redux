@@ -18,67 +18,14 @@ class App extends Component {
 
         return (
             <div>
-                <div className='header row' style={{
-                    backgroundColor: '#ddd',
-                }}>
-                    <div style={{
-                        width: 50,
-                        height: 30,
-                        display: 'inline-block',
-                        verticalAlign: 'middle',
-                        border: '1px solid #ccc',
-                        borderTop: 'none',
-                        borderLeft: 'none',
-                        boxSizing: 'border-box'
-                    }} />
-                    {
-                        ['A','B','C','D','E','F','G','H','I','J'].map((cell, i) =>
-                            <div 
-                                key={i}
-                                style={{
-                                    width: 120,
-                                    height: 30,
-                                    verticalAlign: 'middle',
-                                    backgroundColor: '#efefef',
-                                    border: '1px solid #ccc',
-                                    borderTop: 'none',
-                                    borderLeft: 'none',
-                                    display: 'inline-block',
-                                    boxSizing: 'border-box',
-                                    textAlign: 'center',
-                                    lineHeight: '30px',
-                                    color: '#444',
-                                    fontSize: '0.8em'
-                                }}
-                            >
-                                {cell}
-                            </div>
-                        )
-                    }
+                <div className="header row">
+                    HEADER
                 </div>
-                <div className='body row scrollY' style={{
-                    backgroundColor: '#ccc'
-                 }}>
+                <div className="body row">
                     <Table 
                         onSetCellValue={this.onSetCellValue}
-                        rows={spreadsheetData} />
-                    <button
-                        onClick={() => {
-                            dispatch(addRow())
-                        }}
-                        style={{
-                            width: '100%',
-                            height: 30,
-                            border: 'none',
-                            backgroundColor: '#ccc',
-                            display: 'block',
-                            cursor: 'pointer',
-                            color: '#444'
-                        }}>
-                        ADD ROW
-                    </button>
+                        rows={spreadsheetData.rows} />
                 </div>
-
             </div>
         )
     }
