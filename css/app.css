@@ -39,7 +39,7 @@ input:focus {
 .body {
     top: 60px;
     bottom: 0;
-    background-color: magenta;
+    background-color: white;
 }
 .columnLeft {
     width: 50px;

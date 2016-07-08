@@ -9,9 +9,11 @@ export const addRow = () => {
 }
 
 export const setCellFocus = (rowIdx, cellIdx) => {
-    type: SET_CELL_FOCUS,
-    rowIdx,
-    cellIdx
+    return {
+        type: SET_CELL_FOCUS,
+        rowIdx,
+        cellIdx
+    }
 }
 
 export const setCellValue = (rowIdx, cellIdx, value) => {

@@ -21,7 +21,7 @@ const style = {
         borderCollapse: 'collapse'
     },
     td: {
-        width: 200,
+        width: 160,
         height: 30,
         border: '1px solid #dadada',
         fontSize: '12px',
@@ -53,7 +53,6 @@ const style = {
     },
     waffleHeaderTd: {
         height: 29,
-        backgroundColor: '#f3f3f3',
         textAlign: 'center'
     },
     waffleIron: {
@@ -102,8 +101,9 @@ export default class Table extends Component {
     render () {
 
         const {
+            onSetCellFocus,
             onSetCellValue,
-            rows
+            spreadsheetData
         } = this.props
 
         return (
@@ -121,11 +121,32 @@ export default class Table extends Component {
                         <tbody>
                             <tr>
                             {
-                                ['A','B','C','D','E','F','G','H','I','J']
+                                [
+                                    'Contact First Name',
+                                    'Constact Last Name',
+                                    'Contact E-mail',
+                                    'Jobsite Name',
+                                    'Onsite Contact Name',
+                                    'Onsite Contact Phone',
+                                    'Start Date',
+                                    'End Date',
+                                    'Start Time',
+                                    'Product'
+                                ]
                                 .map((cell, i) =>
                                     <td
                                         key={i}
-                                        style={Object.assign({}, style.td, style.waffleHeaderTd)}
+                                        style={Object.assign(
+                                            {}, 
+                                            style.td, 
+                                            style.waffleHeaderTd,
+                                            {
+                                                backgroundColor: spreadsheetData.cellFocus.length > 0 
+                                                    && spreadsheetData.cellFocus[1] === i
+                                                    ? '#ccc'
+                                                    : '#f3f3f3'
+                                            }
+                                        )}
                                     >
                                         {cell}
                                     </td>
@@ -145,11 +166,14 @@ export default class Table extends Component {
                     >
                         <tbody>
                         {
-                            rows
+                            spreadsheetData.rows
                             .map((row, i) =>
                                 <tr key={i}>
                                     <td style={Object.assign({}, style.td, { 
-                                        backgroundColor: '#efefef',
+                                        backgroundColor: spreadsheetData.cellFocus.length > 0
+                                            && spreadsheetData.cellFocus[0] === i
+                                                ? '#ccc'
+                                                : '#efefef',
                                         textAlign: 'center' 
                                     })}>
                                         {i + 1}
@@ -169,9 +193,11 @@ export default class Table extends Component {
                         style={style.table}>
                         <tbody>
                         {
-                            rows
+                            spreadsheetData.rows
                             .map((row, i) => <TableRow 
+                                cellFocus={spreadsheetData.cellFocus}
                                 key={i} 
+                                onSetCellFocus={onSetCellFocus}
                                 onSetCellValue={onSetCellValue}
                                 row={{
                                     rowIdx: i,
@@ -217,12 +243,12 @@ export default class Table extends Component {
         waffleHeader.style.transform = 'translateX(-' + waffleIron.scrollLeft + 'px)'
         waffleSidebar.style.transform = 'translateY(-' + waffleIron.scrollTop + 'px)'
     }
-
 }
 
 Table.propTypes = {
+    onSetCellFocus: PropTypes.func.isRequired,
     onSetCellValue: PropTypes.func.isRequired,
-    rows: PropTypes.array.isRequired
+    spreadsheetData: PropTypes.object.isRequired
 }
 
 export default Table

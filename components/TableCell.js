@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react'
 
 const style = {
     td: {
-        width: 200,
+        width: 160,
         height: 30,
         border: '1px solid #dadada',
         fontSize: '12px',
@@ -18,7 +18,8 @@ export default class TableCell extends Component {
 
     shouldComponentUpdate (nextProps) {
 
-        if (this.props.cell.value === nextProps.cell.value) {
+        if (this.props.cell.value === nextProps.cell.value &&
+                this.props.focus === nextProps.focus) {
             return false
         }
 
@@ -29,9 +30,11 @@ export default class TableCell extends Component {
 
         const {
             cell,
+            focus,
+            onSetCellFocus,
             onSetCellValue
         } = this.props
-    
+
         return (
             <td
                 style={Object.assign({}, style.td, {
@@ -39,9 +42,11 @@ export default class TableCell extends Component {
                  })}
             >
                 <input 
+                    onBlur={() => onSetCellFocus()}
                     onChange={e => onSetCellValue(
                         cell.rowIdx, cell.colIdx, e.target.value
                     )}
+                    onFocus={() => onSetCellFocus(cell.rowIdx, cell.colIdx)}
                     onPaste={e => {
 
                         // Do not paste input into cell
@@ -98,11 +103,12 @@ export default class TableCell extends Component {
                         }) 
                     }}
                     style={{
-                        border: 'none',
+                        border: focus ? '2px solid #3896ff' : 'none',
                         width: '100%',
                         height: 30,
-                        padding: 0,
-                        backgroundColor: 'transparent'
+                        padding: '0 5px',
+                        backgroundColor: 'transparent',
+                        boxSizing: 'border-box'
                     }}
                     type="text" 
                     value={cell.value} />
@@ -113,5 +119,7 @@ export default class TableCell extends Component {
 
 TableCell.propTypes = {
     cell: PropTypes.object.isRequired,
+    focus: PropTypes.bool.isRequired,
+    onSetCellFocus: PropTypes.func.isRequired,
     onSetCellValue: PropTypes.func.isRequired
 }

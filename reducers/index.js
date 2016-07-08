@@ -16,23 +16,36 @@ while (i < defaultRowLen) {
 }
 
 const spreadsheetData = (state = {
+    cellFocus: [],
     rows: defaultRows
 }, action) => {
 
     switch (action.type) {
 
-    case ADD_ROW:
+    case ADD_ROW: {
         return Object.assign({}, state, {
             rows: [
                 ...state,
                 emptyRow
             ]
         })
+    }
 
-    case SET_CELL_FOCUS:
-        return state
+    case SET_CELL_FOCUS: {
 
-    case SET_CELL_VALUE:
+        const cellFocus = []
+        const { cellIdx, rowIdx } = action
+
+        if (cellIdx !== null && rowIdx !== null) {
+            cellFocus.push(rowIdx, cellIdx)     
+        }
+
+        return Object.assign({}, state, {
+            cellFocus
+        })
+    }
+
+    case SET_CELL_VALUE: {
 
         const { cellIdx, rowIdx, value } = action
         const rowsLen = state.rows.length
@@ -61,6 +74,7 @@ const spreadsheetData = (state = {
                 return row
             })
         })
+    }
         
     default:
         return state

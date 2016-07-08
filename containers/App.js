@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react'
 import Table from '../components/Table'
-import { addRow, setCellValue } from '../actions'
+import { addRow, setCellFocus, setCellValue } from '../actions'
 import { connect } from 'react-redux'
 
 class App extends Component {
@@ -9,6 +9,7 @@ class App extends Component {
 
         super(props)
 
+        this.onSetCellFocus = this.onSetCellFocus.bind(this)
         this.onSetCellValue = this.onSetCellValue.bind(this)
     }
 
@@ -19,15 +20,23 @@ class App extends Component {
         return (
             <div>
                 <div className="header row">
-                    HEADER
+
                 </div>
                 <div className="body row">
                     <Table 
+                        onSetCellFocus={this.onSetCellFocus}
                         onSetCellValue={this.onSetCellValue}
-                        rows={spreadsheetData.rows} />
+                        spreadsheetData={spreadsheetData} />
                 </div>
             </div>
         )
+    }
+
+    onSetCellFocus (rowNum = null, colNum = null) {
+
+        const { dispatch } = this.props
+
+        dispatch(setCellFocus(rowNum, colNum))
     }
 
     onSetCellValue (rowNum, colNum, colData) {
