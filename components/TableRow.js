@@ -3,6 +3,8 @@ import TableCell from './TableCell'
 
 const TableRow = ({
     cellFocus,
+    numberOfCols,
+    numberOfRows,
     onSetCellFocus,
     onSetCellValue,
     row
@@ -20,6 +22,8 @@ const TableRow = ({
                     && cellFocus[1] === i
             }
             key={i} 
+            numberOfCols={numberOfCols}
+            numberOfRows={numberOfRows}
             onSetCellFocus={onSetCellFocus}
             onSetCellValue={onSetCellValue} />
         )}
@@ -28,6 +32,8 @@ const TableRow = ({
 
 TableRow.propTypes = {
     cellFocus: PropTypes.array.isRequired,
+    numberOfCols: PropTypes.number.isRequired,
+    numberOfRows: PropTypes.number.isRequired,
     onSetCellFocus: PropTypes.func.isRequired,
     onSetCellValue: PropTypes.func.isRequired,
     row: PropTypes.object.isRequired

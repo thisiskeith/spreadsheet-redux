@@ -1,3 +1,4 @@
+import ContextMenu from './ContextMenu'
 import React, { Component, PropTypes } from 'react'
 import TableRow from './TableRow'
 
@@ -41,7 +42,6 @@ const style = {
     sidebar: {
         width: 31,
         height: 200, // Set by browser
-        overflow: 'hidden',
         position: 'absolute',
         top: 30,
         left: 0,
@@ -101,14 +101,21 @@ export default class Table extends Component {
     render () {
 
         const {
+            onContextMenu,
+            onSelectContextMenuOption,
             onSetCellFocus,
             onSetCellValue,
             spreadsheetData
         } = this.props
 
+        const { cellFocus, contextMenu, rows } = spreadsheetData
+
         return (
             <div style={style.spreadsheet}>
-                <div style={style.cornerstone} />
+                <div 
+                    onContextMenu={e => e.preventDefault()}
+                    style={style.cornerstone} 
+                />
                 <div 
                     ref="header"
                     style={style.header}
@@ -135,14 +142,16 @@ export default class Table extends Component {
                                 ]
                                 .map((cell, i) =>
                                     <td
+                                        className="noUserSelect"
                                         key={i}
+                                        onContextMenu={e => e.preventDefault()}
                                         style={Object.assign(
                                             {}, 
                                             style.td, 
                                             style.waffleHeaderTd,
                                             {
-                                                backgroundColor: spreadsheetData.cellFocus.length > 0 
-                                                    && spreadsheetData.cellFocus[1] === i
+                                                backgroundColor: (cellFocus.length > 0 && cellFocus[1] === i) ||
+                                                    (contextMenu.isVisible == true)
                                                     ? '#ccc'
                                                     : '#f3f3f3'
                                             }
@@ -169,14 +178,32 @@ export default class Table extends Component {
                             spreadsheetData.rows
                             .map((row, i) =>
                                 <tr key={i}>
-                                    <td style={Object.assign({}, style.td, { 
-                                        backgroundColor: spreadsheetData.cellFocus.length > 0
-                                            && spreadsheetData.cellFocus[0] === i
-                                                ? '#ccc'
-                                                : '#efefef',
-                                        textAlign: 'center' 
-                                    })}>
+                                    <td 
+                                        className="noUserSelect"
+                                        onContextMenu={e => {
+                                            e.preventDefault()
+                                            onContextMenu(true, i) 
+                                        }}
+                                        style={
+                                            Object.assign({}, style.td, { 
+                                                backgroundColor: (cellFocus.length > 0 && cellFocus[0] === i) ||
+                                                    (contextMenu.isVisible && contextMenu.rowIdx === i)
+                                                    ? '#ccc'
+                                                    : '#efefef',
+                                                position: 'relative',
+                                                textAlign: 'center' 
+                                            })
+                                        }
+                                    >
                                         {i + 1}
+                                        {
+                                            contextMenu.isVisible === true 
+                                                && contextMenu.rowIdx === i ?
+                                                <ContextMenu 
+                                                    onSelectContextMenuOption={onSelectContextMenuOption}
+                                                />
+                                                : null
+                                        }
                                     </td>
                                 </tr>
                             )
@@ -193,10 +220,12 @@ export default class Table extends Component {
                         style={style.table}>
                         <tbody>
                         {
-                            spreadsheetData.rows
+                            rows
                             .map((row, i) => <TableRow 
-                                cellFocus={spreadsheetData.cellFocus}
+                                cellFocus={cellFocus}
                                 key={i} 
+                                numberOfCols={rows[0].length}
+                                numberOfRows={rows.length}
                                 onSetCellFocus={onSetCellFocus}
                                 onSetCellValue={onSetCellValue}
                                 row={{
@@ -240,12 +269,14 @@ export default class Table extends Component {
         const waffleIron = this.refs.waffleIron
         const waffleSidebar = this.refs.waffleSidebar
 
-        waffleHeader.style.transform = 'translateX(-' + waffleIron.scrollLeft + 'px)'
-        waffleSidebar.style.transform = 'translateY(-' + waffleIron.scrollTop + 'px)'
+        waffleHeader.style.transform = `translateX(-${waffleIron.scrollLeft}px)`
+        waffleSidebar.style.transform = `translateY(-${waffleIron.scrollTop}px)`
     }
 }
 
 Table.propTypes = {
+    onContextMenu: PropTypes.func.isRequired,
+    onSelectContextMenuOption: PropTypes.func.isRequired,
     onSetCellFocus: PropTypes.func.isRequired,
     onSetCellValue: PropTypes.func.isRequired,
     spreadsheetData: PropTypes.object.isRequired

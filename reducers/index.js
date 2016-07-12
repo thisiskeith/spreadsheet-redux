@@ -1,8 +1,10 @@
 import { combineReducers } from 'redux'
 import { 
     ADD_ROW,
+    SELECT_CONTEXT_MENU_OPTION,
     SET_CELL_FOCUS,
-    SET_CELL_VALUE 
+    SET_CELL_VALUE,
+    SET_CONTEXT_MENU
 } from '../actions'
 
 const defaultRowLen = 50
@@ -17,6 +19,9 @@ while (i < defaultRowLen) {
 
 const spreadsheetData = (state = {
     cellFocus: [],
+    contextMenu: {
+        isVisible: false
+    },
     rows: defaultRows
 }, action) => {
 
@@ -31,17 +36,31 @@ const spreadsheetData = (state = {
         })
     }
 
+    case SELECT_CONTEXT_MENU_OPTION: {
+
+        // TODO :: Handle option selections
+
+        return Object.assign({}, state, {
+            contextMenu: {
+                isVisible: false
+            }
+        })
+    }
+
     case SET_CELL_FOCUS: {
 
         const cellFocus = []
-        const { cellIdx, rowIdx } = action
+        let { cellIdx, rowIdx } = action
 
         if (cellIdx !== null && rowIdx !== null) {
-            cellFocus.push(rowIdx, cellIdx)     
+            cellFocus.push(rowIdx, cellIdx)
         }
 
         return Object.assign({}, state, {
-            cellFocus
+            cellFocus,
+            contextMenu: {
+                isVisible: false
+            }
         })
     }
 
@@ -73,6 +92,20 @@ const spreadsheetData = (state = {
                 }
                 return row
             })
+        })
+    }
+
+    case SET_CONTEXT_MENU: {
+
+        const { isVisible, rowIdx } = action
+
+        return Object.assign({}, state, {
+            contextMenu: isVisible === true ?
+                Object.assign({}, state.contextMenu, {
+                    isVisible,
+                    rowIdx
+                })
+                : false
         })
     }
         

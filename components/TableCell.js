@@ -31,6 +31,8 @@ export default class TableCell extends Component {
         const {
             cell,
             focus,
+            numberOfCols,
+            numberOfRows,
             onSetCellFocus,
             onSetCellValue
         } = this.props
@@ -47,6 +49,44 @@ export default class TableCell extends Component {
                         cell.rowIdx, cell.colIdx, e.target.value
                     )}
                     onFocus={() => onSetCellFocus(cell.rowIdx, cell.colIdx)}
+                    onKeyDown={e => {
+
+                        const { keyCode } = e
+
+                        switch (keyCode) {
+
+                        case 37: // left
+                            if (cell.colIdx - 1 >= 0) {
+                                this._input.blur()
+                                onSetCellFocus(cell.rowIdx, cell.colIdx - 1)
+                            }
+                            return
+    
+                        case 38: // up
+                            if (cell.rowIdx - 1 >= 0) {
+                                this._input.blur()
+                                onSetCellFocus(cell.rowIdx - 1, cell.colIdx)
+                            }
+                            return
+        
+                        case 39: // right
+                            if (cell.colIdx + 1 < numberOfCols) {
+                                this._input.blur()
+                                onSetCellFocus(cell.rowIdx, cell.colIdx + 1)
+                            }
+                            return
+        
+                        case 40: // down
+                            if (cell.rowIdx + 1 < numberOfRows) {
+                                this._input.blur()
+                                onSetCellFocus(cell.rowIdx + 1, cell.colIdx)
+                            }
+                            return
+
+                        default:
+                            return
+                        }
+                    }}
                     onPaste={e => {
 
                         // Do not paste input into cell
@@ -101,6 +141,12 @@ export default class TableCell extends Component {
                       
                             rowNum += 1
                         }) 
+                    }}
+                    ref={input => {
+                        if (input !== null && focus === true) {
+                            input.focus()
+                        }
+                        return this._input = input
                     }}
                     style={{
                         border: focus ? '2px solid #3896ff' : 'none',
