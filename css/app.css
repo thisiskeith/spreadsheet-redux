@@ -1,3 +1,7 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -49,31 +53,12 @@ input:focus {
     left: 50px;right: 0;
 }
 
-/* Spreadsheet scrollbars for Chrome, Safari */
-.waffle-iron::-webkit-scrollbar {
-    width: 16px;
-    height: 16px;
-}
-.waffle-iron::-webkit-scrollbar-track {
-    background-color: #f3f3f3;
 
-}
-.waffle-iron::-webkit-scrollbar-thumb:vertical,
-.waffle-iron::-webkit-scrollbar-thumb:horizontal {
-    background-color: #ccc;
-    border: 2px solid #f3f3f3;
-}
-.waffle-iron::-webkit-scrollbar-thumb:vertical:hover,
-.waffle-iron::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #3896ff;
-}
-.waffle-iron::-webkit-scrollbar-thumb:horizontal {
-    background-color: rgba(0,0,0,.2);
 
-}
-.waffle-iron::-webkit-scrollbar-corner {
-    background-color: rgba(255, 255, 255, 0.1);
-}
+
+
+
+
 
 /* Layout x-browser */
 .maxContent {
@@ -98,3 +83,135 @@ input:focus {
 .contextMenuRow:hover {
     background-color: #efefef;
 }
+
+
+
+/* Spreadsheet */
+.waffleRect {
+    position: relative;
+}
+
+/* Corner */
+.waffleCornerStone {
+    width: 40px;
+    height: 30px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px solid #dadada;
+    background-color: #f3f3f3;
+    z-index: 2;
+}
+
+/* Header */
+.waffleHeaderRect {
+    width: 200px; /* DEFAULT: SET BY BROWSER RESIZE */
+    height: 30px;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 40px;
+    background-color: #ddd;
+    z-index: 1;
+}
+    .waffleHeader {
+        width: 100%;
+        height: 30px;
+        white-space: nowrap;
+    }
+        .waffleHeaderCol {
+            width: 160px;
+            height: 30px;
+            border: 1px solid #dadada;
+            border-left: none;
+            font-size: 0.8em;
+            padding: 0;
+            text-align: center;
+            display: inline-block;
+            vertical-align: top;
+            line-height: 30px;
+        }
+
+/* Sidebar */
+.waffleSidebarRect {
+    width: 30px;
+    height: 200px; /* DEFAULT: SET BY BROWSER RESIZE */
+    position: absolute;
+    top: 29px;
+    left: 0;
+    background-color: #ddd;
+    z-index: 1;
+}
+    .waffleSidebar {
+        width: 30px;
+    }
+        .waffleSidebarRow {
+            width: 40px;
+            height: 30px;
+            position: relative;
+            text-align: center;
+            border: 1px solid #dadada;
+            border-bottom: none;
+            font-size: 0.8em;
+            line-height: 30px;
+        }
+
+/* Spreadsheet container */
+.waffleIron {
+    width: 200px;
+    height: 200px;
+    background-color: #efefef;
+    overflow: auto;
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    z-index: 0;
+}
+/* Spreadsheet scrollbars for Chrome, Safari */
+.waffleIron::-webkit-scrollbar {
+    width: 16px;
+    height: 16px;
+}
+.waffleIron::-webkit-scrollbar-track {
+    background-color: #f3f3f3;
+
+}
+.waffleIron::-webkit-scrollbar-thumb:vertical,
+.waffleIron::-webkit-scrollbar-thumb:horizontal {
+    background-color: #ccc;
+    border: 2px solid #f3f3f3;
+}
+.waffleIron::-webkit-scrollbar-thumb:vertical:hover,
+.waffleIron::-webkit-scrollbar-thumb:horizontal:hover {
+    background: #3896ff;
+}
+.waffleIron::-webkit-scrollbar-thumb:horizontal {
+    background-color: rgba(0,0,0,.2);
+
+}
+.waffleIron::-webkit-scrollbar-corner {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Spreadsheet grid */
+.waffle {
+
+}
+    .waffleRow {
+        width: 100%;
+        height: 30px;
+        white-space: nowrap;
+    }
+    .waffleCol {
+        width: 160px;
+        height: 30px;
+        border: 1px solid #dadada;
+        border-top: none;
+        border-left: none;
+        font-size: 0.8em;
+        padding: 0;
+        background-color: white;
+        display: inline-block;
+        vertical-align: top;
+        position: relative;
+    }

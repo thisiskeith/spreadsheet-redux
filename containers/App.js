@@ -17,28 +17,45 @@ class App extends Component {
 
     render () {
 
-        const { dispatch, spreadsheetData } = this.props
+        const { dispatch, spreadsheet } = this.props
 
         return (
             <div>
                 <div className="header row">
-
+                    {/* Account select drop down 
+                    <div style={{
+                        width: 300,
+                        backgroundColor: 'red',
+                        zIndex: 3,
+                        position: 'fixed',
+                        top: 50,
+                        left: 40
+                    }}>
+                        <div>Row 1</div>
+                        <div>Row 1</div>
+                        <div>Row 1</div>
+                        <div>Row 1</div>
+                        <div>Row 1</div>
+                        <div>Row 1</div>
+                        <div>Row 1</div>
+                    </div>
+                    */}
                 </div>
                 <div className="body row">
                     <Table 
-                        onContextMenu={(isVisible, rowNum = null) => 
-                            dispatch(setContextMenu(isVisible, rowNum))
+                        onContextMenu={(isVisible, rowIdx = null, cellIdx = null) => 
+                            dispatch(setContextMenu(isVisible, rowIdx, cellIdx))
                         }
-                        onSelectContextMenuOption={option => 
-                            dispatch(selectContextMenuOption(option))
+                        onSelectContextMenuOption={(option, rowIdx, cellIdx = null) => 
+                            dispatch(selectContextMenuOption(option, rowIdx, cellIdx))
                         }
                         onSetCellFocus={(rowNum = null, colNum = null) => 
                             dispatch(setCellFocus(rowNum, colNum))
                         }
-                        onSetCellValue={(rowNum, colNum, colData) => 
-                            dispatch(setCellValue(rowNum, colNum, colData))
+                        onSetCellValue={(rowNum, colNum, colData, isEditing) => 
+                            dispatch(setCellValue(rowNum, colNum, colData, isEditing))
                         }
-                        spreadsheetData={spreadsheetData} />
+                        spreadsheetData={spreadsheet} />
                 </div>
             </div>
         )
@@ -48,11 +65,11 @@ class App extends Component {
 const mapStateToProps = (state) => {
     
     const {
-        spreadsheetData
+        spreadsheet
     } = state
 
     return {
-        spreadsheetData
+        spreadsheet
     }
 }
 

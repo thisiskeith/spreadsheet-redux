@@ -1,7 +1,10 @@
 import React, { PropTypes } from 'react'
 
 const ContextMenu = ({
-    onSelectContextMenuOption
+    cellIdx,
+    onSelectContextMenuOption,
+    options,
+    rowIdx
 }) => (
     <div style={{
         width: 140,
@@ -13,11 +16,11 @@ const ContextMenu = ({
         boxShadow: '3px 3px 5px rgba(0, 0, 0, 0.3)'
     }}>
     {
-        ['Cut', 'Copy', 'Paste']
+        options   
         .map((option, i) => <div
             className="contextMenuRow"
             key={i}
-            onClick={() => onSelectContextMenuOption(option)}
+            onClick={() => onSelectContextMenuOption(option, rowIdx, cellIdx)}
             style={{
                 height: 30,
                 lineHeight: '30px',
@@ -32,7 +35,10 @@ const ContextMenu = ({
 )
 
 ContextMenu.propTypes = {
-    onSelectContextMenuOption: PropTypes.func.isRequired
+    cellIdx: PropTypes.number,
+    onSelectContextMenuOption: PropTypes.func.isRequired,
+    options: PropTypes.array.isRequired,
+    rowIdx: PropTypes.number.isRequired
 }
 
 export default ContextMenu
