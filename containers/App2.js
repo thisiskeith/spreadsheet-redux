@@ -25,7 +25,12 @@ class App extends Component {
 
                 </div>
                 <div className="body row">
-                    <Waffle />
+                    <Waffle 
+                        content={spreadsheet} 
+                        onSetCellValue={(rowNum, colNum, colData, isEditing) => 
+                            dispatch(setCellValue(rowNum, colNum, colData, isEditing))
+                        }
+                    />
                 </div>
             </div>
         )

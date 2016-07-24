@@ -99,6 +99,7 @@ canvas { background-color: orange; }
             position: absolute;
             bottom: 0;
             left: 0;
+            display: none;
         }
     .scrollbarXButtonLeft {
         width: 20px;height: 20px;
@@ -141,6 +142,7 @@ canvas { background-color: orange; }
             position: absolute;
             top: 0;
             right: 0;
+            display: none;
         }
     .scrollbarYButtonDown {
         width: 20px;height: 20px;

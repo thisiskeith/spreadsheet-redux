@@ -8,16 +8,19 @@ import {
 
 const defaultRowLen = 25
 const defaultRows = new Array(defaultRowLen)
-const emptyRow = [
-    '', '', '', '', '', '', '', '', '', '',
-    '', '', '', '', '', '', '', '', '', '',
-    '', '', '', '', '', ''
-]
-const maxRowLen = 25
+//const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+const emptyRow = ['', '', '', '', '', '', '', '', '', '']
 let i = 0
 
 while (i < defaultRowLen) {
+
+    // Hack to add numbers
+//    let newRow = emptyRow.slice()
+//    newRow.splice(0, 1, 'row ' + i)
+
+    // Use after rm hack
     defaultRows[i] = emptyRow.slice()
+///    defaultRows[i] = newRow
     i += 1
 }
 
