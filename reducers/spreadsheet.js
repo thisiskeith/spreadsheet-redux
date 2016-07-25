@@ -6,21 +6,25 @@ import {
     SET_CONTEXT_MENU
 } from '../actions'
 
-const defaultRowLen = 25
+const defaultRowLen = 500
 const defaultRows = new Array(defaultRowLen)
-//const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-const emptyRow = ['', '', '', '', '', '', '', '', '', '']
+const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+//const emptyRow = ['', '', '', '', '', '', '', '', '', '']
 let i = 0
 
 while (i < defaultRowLen) {
 
-    // Hack to add numbers
-//    let newRow = emptyRow.slice()
-//    newRow.splice(0, 1, 'row ' + i)
+    const hack = true
 
-    // Use after rm hack
-    defaultRows[i] = emptyRow.slice()
-///    defaultRows[i] = newRow
+    if (hack) {
+        // Hack to add numbers
+        let newRow = emptyRow.slice()
+        newRow.splice(0, 1, 'row ' + i)
+        defaultRows[i] = newRow
+    } else {
+        defaultRows[i] = emptyRow.slice()
+    }
+
     i += 1
 }
 
