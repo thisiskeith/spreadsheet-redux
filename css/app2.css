@@ -36,12 +36,12 @@ input:focus {
     overflow-y: auto;
 }
 .header {
-    height: 60px;
+    height: 65px;
     top: 0;
     background-color: white;
 }
 .body {
-    top: 60px;
+    top: 65px;
     bottom: 0;
     background-color: white;
     position: relative;
@@ -61,7 +61,7 @@ body { font-size: 16px; }
 .waffle { 
     width: 420px;height: 140px;
     position: relative;
-    background-color: cyan;
+    background-color: #e9e9e9;
 }
 
 canvas { background-color: orange; }
