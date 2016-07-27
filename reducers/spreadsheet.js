@@ -6,7 +6,7 @@ import {
     SET_CONTEXT_MENU
 } from '../actions'
 
-const defaultRowLen = 25
+const defaultRowLen = 20000
 const defaultRows = new Array(defaultRowLen)
 const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 //const emptyRow = ['', '', '', '', '', '', '', '', '', '']
@@ -32,15 +32,31 @@ export default function spreadsheet(state = {
     cellFocus: [],
     columns: [
         { height: 42, label: 'A', width: 100 },
-        { height: 42, label: 'B', width: 100 },
+        { height: 42, label: 'B', width: 50 },
         { height: 42, label: 'C', width: 412 },
         { height: 42, label: 'D', width: 100 },
-        { height: 42, label: 'E', width: 100 },
-        { height: 42, label: 'F', width: 100 },
+        { height: 42, label: 'E', width: 60 },
+        { height: 42, label: 'F', width: 210 },
         { height: 42, label: 'G', width: 100 },
-        { height: 42, label: 'H', width: 100 },
+        { height: 42, label: 'H', width: 220 },
         { height: 42, label: 'I', width: 100 },
-        { height: 42, label: 'J', width: 100 }
+        { height: 42, label: 'J', width: 100 },
+        { height: 42, label: 'K', width: 100 },
+        { height: 42, label: 'L', width: 50 },
+        { height: 42, label: 'M', width: 412 },
+        { height: 42, label: 'N', width: 100 },
+        { height: 42, label: 'O', width: 60 },
+        { height: 42, label: 'P', width: 210 },
+        { height: 42, label: 'Q', width: 100 },
+        { height: 42, label: 'R', width: 220 },
+        { height: 42, label: 'S', width: 100 },
+        { height: 42, label: 'T', width: 100 },
+        { height: 42, label: 'U', width: 100 },
+        { height: 42, label: 'V', width: 50 },
+        { height: 42, label: 'W', width: 412 },
+        { height: 42, label: 'X', width: 100 },
+        { height: 42, label: 'Y', width: 60 },
+        { height: 42, label: 'Z', width: 210 }
     ],
     contextMenu: {
         isVisible: false

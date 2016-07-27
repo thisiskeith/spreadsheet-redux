@@ -1,14 +1,15 @@
 
-// TODO :: FIX PASTE
-// TODO :: FIX CLICK HIGHLIGHT
-// TODO :: FIX ARROW KEY NAV
-// TODO :: FIX PASTE SINGLE CELL (EASY)
+// TODO :: remove isScrollRight =/
 
+// TODO :: FIX PASTE
+// TODO :: FIX PASTE SINGLE CELL (EASY)
+// TODO :: OOB CANVAS CLICKS
+
+// BUG :: TYPE IN A CELL, USE ARROW KEY, KEEP TYPING - UPDATES WRONG CELL
 // BUG :: DOES NOT RE-RENDER WAFFLE ON PASTE WHEN LAST ROW IS VISIBLE (PROB EASY)
 
 // -- NICE TO HAVE --
-// TODO :: MAKE HIGHLIGHT A FIST CLASS CONCEPT WHEN RENDERING, OPTION TO SHOW/HiDE; NEED OPTION TO CLEAR IT FROM CACHE TO NOT RENDER
-// TODO :: ADD FURTHER RETINA SUPPORT
+// TODO :: ADD RETINA SUPPORT
 
 import React, { Component } from 'react'
 
@@ -33,12 +34,15 @@ export default class Waffle extends Component {
         this._mouseDownInterval = undefined
 
         // Methods
+        this.clearCellHighlight = this.clearCellHighlight.bind(this)
         this.clearMouseDownInterval = this.clearMouseDownInterval.bind(this)
-        this.drawWaffle = this.drawWaffle.bind(this)
+        this.renderWaffle = this.renderWaffle.bind(this)
+        this.isScrollableRight = this.isScrollableRight.bind(this)
         this.onClickCanvas = this.onClickCanvas.bind(this)
         this.onKeyDownWindow = this.onKeyDownWindow.bind(this)
         this.onKeyPressWindow = this.onKeyPressWindow.bind(this)
         this.onMouseDownInterval = this.onMouseDownInterval.bind(this)
+        this.onMouseMoveCanvas = this.onMouseMoveCanvas.bind(this)
         this.onPasteWindow = this.onPasteWindow.bind(this)
         this.onWheelCanvas = this.onWheelCanvas.bind(this)
         this.renderCell = this.renderCell.bind(this)
@@ -104,6 +108,7 @@ export default class Waffle extends Component {
             <div className='waffle' ref='waffle'>
                 <canvas 
                     onClick={this.onClickCanvas}
+                    onMouseMove={this.onMouseMoveCanvas}
                     onWheel={this.onWheelCanvas}
                     ref='canvas' 
                 />
@@ -159,66 +164,15 @@ export default class Waffle extends Component {
         )
     }
 
+    clearCellHighlight () {
+        this._highlight = undefined
+        this.renderWaffle()
+    }
+
     clearMouseDownInterval () {
         if (this._mouseDownInterval) {
             clearInterval(this._mouseDownInterval)
             this._mouseDownInterval = undefined
-        }
-    }
-
-    drawWaffle () {
-
-        const { content } = this.props
-        const { columns, rows } = content
-
-        // Clear canvas 
-        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height)
-
-        // Draw cornerstone
-        this.renderCornerstone(0, 0, ROW_NUMBER_WIDTH, COLUMN_HEADER_HEIGHT)
-
-        // Get size of viewport able to render cells
-        const viewportForCells = this.getViewportForCells()
-
-        // Render column headers and get start/stop range of available columns
-        const colIdxStart = this._waffleOrigin.x
-        const colIdxStop = this.renderColumnsInViewport(columns.slice(), colIdxStart, viewportForCells.width)
-
-        // Render row numbers and get start/stop range of availsble rows
-        const rowIdxStart = this._waffleOrigin.y
-        const rowIdxStop = this.renderRowsInViewport(rows.slice(), rowIdxStart, viewportForCells.height)
-
-        // Cache row/col start/stop
-        Object.assign(this._waffleOrigin, {
-            rowIdxStart,
-            rowIdxStop,
-            colIdxStart,
-            colIdxStop
-        })
-
-        let i = rowIdxStart
-        const len = rowIdxStop
-
-        let rowY = COLUMN_HEADER_HEIGHT
-
-        for (; i <= len; i += 1) {
-
-            // Filter out what will not be in view
-            const row = rows[i].filter((a, i) => i >= colIdxStart && i <= colIdxStop)
-
-            let cellX = ROW_NUMBER_WIDTH
-
-            // Render cells
-            row.forEach((cell, i) => {
-
-                const cellW = columns[colIdxStart + i].width
-
-                this.renderCell(cell, cellX, rowY, cellW, CELL_HEIGHT)
-
-                cellX += cellW
-            })
-
-            rowY += CELL_HEIGHT
         }
     }
 
@@ -253,6 +207,30 @@ export default class Waffle extends Component {
         return needle
     }
 
+    getIndexByYPos (arr, yPos) {
+
+        let sigma = 0
+        let i = 0
+        const len = arr.length
+        let needle = {}
+
+        for (; i < len; i += 1) {
+
+            if (sigma + arr[i] < yPos) {
+                sigma += arr[i]
+            } else {
+                needle = {
+                    idx: i,
+                    offset: sigma,
+                    value: arr[i]
+                }
+                break
+            }
+        }
+
+        return needle
+    }
+
     getMousePos (e) {
 
         const rect = this._canvas.getBoundingClientRect()
@@ -263,97 +241,34 @@ export default class Waffle extends Component {
         }
     }
 
-    highlightCell ({ 
-        columnIdx, 
-        height, 
-        originX, 
-        originY, 
-        relativeX, 
-        relativeY,
-        rowIdx,
-        width
-    }, callback = null) {
+    getScrollIntoViewCount (columns, colStartIdx, offsetX, viewportWidth) {
 
-        // Cache highlight
-        this._highlight = { 
-            columnIdx,
-            height,
-            originX,
-            originY,
-            relativeX,
-            relativeY,
-            rowIdx,
-            width
+        let count = 1
+        let offCanvasX = columns[colStartIdx]
+        let offCanvasXSigma = offCanvasX
+
+        while (offsetX - offCanvasX > viewportWidth) {
+            offCanvasX = columns[colStartIdx + count]
+            offCanvasXSigma += offCanvasX
+            count += 1
         }
-console.info('highlight', JSON.stringify(this._highlight, null, 2))
-        // Highlight cell
-        this._ctx.beginPath()
-        this._ctx.rect(relativeX, relativeY, width, height)
-        this._ctx.strokeStyle = '#3896ff'
-        this._ctx.lineWidth = 2
-        this._ctx.stroke()
 
-        if (callback && typeof callback === 'function') {
-            callback
+        return {
+            count,
+            offCanvasXSigma
         }
     }
 
-    // UPDATE
     onClickCanvas (e) {
 
         e.stopPropagation()
 
-        console.warn('you clicked on the canvas!', JSON.stringify(this._waffleOrigin, null, 2))
-/*
-        const { content } = this.props
-        const { columns, rows } = content
-
-        const columnCount = columns.length // may not need 
-        const rowCount = rows.length // may not need
-
-
         // Stash input when visible
         this.stashInput()
 
-        let mousePos = this.getMousePos(e)
-
-        const indexByXPos = this.getIndexByXPos(columns.map(c => c.width), mousePos.x - ROW_NUMBER_WIDTH)
-        const columnIdx = indexByXPos.idx
-        const column = columns[columnIdx]
-        const rowIdx = Math.floor((mousePos.y - COLUMN_HEADER_HEIGHT) / CELL_HEIGHT) + this._waffleOrigin.y
-
-
-
-        // ORIGIN X and RELATIVE X are set to same value
-        // 1. get scroll right to work
-        // 2. update origin / relative to work properly
-
-
-
-        const originX = indexByXPos.offset + ROW_NUMBER_WIDTH
-
-        const originY = (rowIdx * CELL_HEIGHT) + COLUMN_HEADER_HEIGHT         
-
-        //let columnsBefore = columns.slice()
-        //columnsBefore.splice(this._waffleOrigin.x, columns.length - this._waffleOrigin.x)
-        //const columnsBeforeSigma = columnsBefore.reduce((a, b) => a + a.width, 0)
-        const relativeX = indexByXPos.offset + ROW_NUMBER_WIDTH
-        const relativeY = originY - (this._waffleOrigin.y * CELL_HEIGHT)
-
-        const cell = {
-            columnIdx,
-            relativeX,
-            relativeY,
-            originX,
-            originY,
-            rowIdx,
-            width: column.width,
-            height: CELL_HEIGHT
-        }
-
         // Reset view
-        this.drawWaffle()
-
+        this.renderWaffle()
+/*
         // TODO :: NOT WORKING ON RESIZE w/ ORANGE ON RIGHT
         // Stop OOB clicks
         if ((cell.relativeY - COLUMN_HEADER_HEIGHT) < 0 
@@ -362,9 +277,42 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
             || columnIdx < 0) {
             return
         }
-
-        this.highlightCell(cell) 
 */
+        const { content } = this.props
+        const { columns, rows } = content
+
+        let mousePos = this.getMousePos(e)
+
+        // Get offset for rows/columns out of view from origin (0,0)
+        const rowOffset = (CELL_HEIGHT * this._waffleOrigin.y) + COLUMN_HEADER_HEIGHT
+        let columnOffset = 0
+        let i = 0
+        const len = this._waffleOrigin.x
+
+        for (; i < len; i += 1) {
+            columnOffset += columns[i].width
+        }
+
+        const indexByXPos = this.getIndexByXPos(columns.map(c => c.width), mousePos.x - ROW_NUMBER_WIDTH + columnOffset)
+        const columnIdx = indexByXPos.idx
+
+        const rowIdx = Math.floor((mousePos.y - COLUMN_HEADER_HEIGHT) / CELL_HEIGHT) + this._waffleOrigin.y
+        const originX = indexByXPos.offset
+        const originY = (rowIdx * CELL_HEIGHT) + COLUMN_HEADER_HEIGHT         
+
+        const column = columns[columnIdx]
+        const cell = {
+            originX,
+            originY, 
+            relativeX: originX - columnOffset + ROW_NUMBER_WIDTH,
+            relativeY: originY - rowOffset + COLUMN_HEADER_HEIGHT,
+            rowIdx,
+            columnIdx,
+            width: column.width,
+            height: CELL_HEIGHT
+        }
+
+        this.renderCellHighlight(cell) 
     }
 
     // UPDATE
@@ -390,7 +338,7 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
                 this.stashInput()
 
                 // Reset view
-                this.drawWaffle()
+                this.renderWaffle()
             }     
             return
         }
@@ -405,7 +353,7 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
                 this.stashInput()
 
                 // Reset view
-                this.drawWaffle()
+                this.renderWaffle()
             }           
             return
         }
@@ -420,7 +368,6 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
             const { columns } = content
             const nextColumnIdx = this._highlight.columnIdx - 1
 
-            // TODO :: update for arrow key scrolling
             if (nextColumnIdx < 0) {
                 return
             }
@@ -433,22 +380,23 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
             this.stashInput()
 
             // Reset view
-            this.drawWaffle()
+            this.renderWaffle()
 
-            // TODO :: update for arrow key scrolling
-          //  if (this._highlight.relativeX - ROW_NUMBER_WIDTH > 0) {
-                this.highlightCell(Object.assign({}, this._highlight, {
+            if (this._highlight.columnIdx - this._waffleOrigin.x > 0) {
+                this.renderCellHighlight(Object.assign({}, this._highlight, {
                     columnIdx: nextColumnIdx,
                     originX: this._highlight.originX - this._highlight.width,
                     width: nextWidth,
                     relativeX: this._highlight.relativeX - nextWidth
                 }))
-            //} else {
-             //   this.highlightCell(Object.assign({}, this._highlight, {
-              //      originX: this._highlight.originX - CELL_WIDTH,
-               //     x: this._highlight.relativeX
-              //  }), this.scrollLeft())
-           // }
+            } else {
+                this.renderCellHighlight(Object.assign({}, this._highlight, {
+                    columnIdx: nextColumnIdx,
+                    originX: this._highlight.originX - this._highlight.width,
+                    width: nextWidth,
+                    relativeX: this._highlight.relativeX
+                }), this.scrollLeft())
+            }
             return
         }
 
@@ -468,15 +416,15 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
                 this.stashInput()
 
                 // Reset view
-                this.drawWaffle()
+                this.renderWaffle()
 
                 if (this._highlight.relativeY - COLUMN_HEADER_HEIGHT > 0) {
-                    this.highlightCell(Object.assign({}, this._highlight, {
+                    this.renderCellHighlight(Object.assign({}, this._highlight, {
                         originY: this._highlight.originY - CELL_HEIGHT,
                         relativeY: this._highlight.relativeY - CELL_HEIGHT
                     }))
                 } else {
-                    this.highlightCell(Object.assign({}, this._highlight, {
+                    this.renderCellHighlight(Object.assign({}, this._highlight, {
                         originY: this._highlight.originY - CELL_HEIGHT,
                         relativeY: this._highlight.relativeY
                     }), this.scrollUp())
@@ -496,37 +444,68 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
             const { columns } = content
             const nextColumnIdx = this._highlight.columnIdx + 1
 
-            // TODO :: update for arrow key scrolling
             if (nextColumnIdx > columns.length - 1) {
                 return
             }
 
             e.preventDefault()
 
+            const columnWidths = columns.slice().map(c => c.width)
+            const viewportForCells = this.getViewportForCells()
+            const thisCell = columns[this._highlight.columnIdx]
+            const nextCell = columns[this._highlight.columnIdx + 1]
+            const thisOffsetX = this._highlight.relativeX + thisCell.width
+            const nextOffsetX = this._highlight.relativeX + nextCell.width
             const nextWidth = columns[nextColumnIdx].width
+            const { colIdxStart  } = this._waffleOrigin
 
             // Stash input when visible
             this.stashInput()
 
             // Reset view
-            this.drawWaffle()
+            this.renderWaffle()
 
-            // TODO :: update for arrow key scrolling
-          //  if ((this._highlight.relativeX + CELL_WIDTH) < window.innerWidth - SCROLL_TRACK_WIDTH - ROW_NUMBER_WIDTH) {
+            // is current cell able to be rendered in viewport
+            if (thisOffsetX > viewportForCells.width) {
 
-                this.highlightCell(Object.assign({}, this._highlight, {
+                const scrollCount = this.getScrollIntoViewCount(
+                    columnWidths,
+                    colIdxStart,
+                    thisOffsetX,
+                    viewportForCells.width
+                )
+
+                this.renderCellHighlight(Object.assign({}, this._highlight, {
+                    relativeX: this._highlight.relativeX - scrollCount.offCanvasXSigma
+                }), this.scrollRight(scrollCount.count))
+
+            // is next cell able to be rendered in viewport
+            } else if (nextOffsetX  > viewportForCells.width) {
+
+                const scrollCount = this.getScrollIntoViewCount(
+                    columnWidths,
+                    colIdxStart,
+                    nextOffsetX,
+                    viewportForCells.width
+                )
+
+                this.renderCellHighlight(Object.assign({}, this._highlight, {
                     columnIdx: nextColumnIdx,
                     originX: this._highlight.originX + nextWidth,
-                    width: nextWidth,
-                    relativeX: this._highlight.relativeX + this._highlight.width
-                }))
+                    relativeX: this._highlight.relativeX + this._highlight.width - scrollCount.offCanvasXSigma,
+                    width: nextWidth
+                }), this.scrollRight(scrollCount.count))
 
-           // } else {
-           //     this.highlightCell(Object.assign({}, this._highlight, {
-            //        originX: this._highlight.originX + CELL_WIDTH,
-            //        x: this._highlight.relativeX
-            //    }), this.scrollRight())
-           // }
+            } else {
+
+                this.renderCellHighlight(Object.assign({}, this._highlight, {
+                    columnIdx: nextColumnIdx,
+                    originX: this._highlight.originX + nextWidth,
+                    relativeX: this._highlight.relativeX + this._highlight.width,
+                    width: nextWidth
+                }))
+            }
+
             return
         }
 
@@ -549,15 +528,15 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
                 this.stashInput()
 
                 // Reset view
-                this.drawWaffle()
+                this.renderWaffle()
 
                 if ((this._highlight.relativeY + CELL_HEIGHT) < window.innerHeight - SCROLL_TRACK_HEIGHT - COLUMN_HEADER_HEIGHT - HEADER_HEIGHT) {
-                    this.highlightCell(Object.assign({}, this._highlight, {
+                    this.renderCellHighlight(Object.assign({}, this._highlight, {
                         originY: this._highlight.originY + CELL_HEIGHT,
                         relativeY: this._highlight.relativeY + CELL_HEIGHT
                     }))
                 } else {
-                    this.highlightCell(Object.assign({}, this._highlight, {
+                    this.renderCellHighlight(Object.assign({}, this._highlight, {
                         originY: this._highlight.originY + CELL_HEIGHT,
                         relativeY: this._highlight.relativeY
                     }), this.scrollDown())
@@ -593,6 +572,19 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
 
     onMouseDownInterval (fn) {
         this._mouseDownInterval = setInterval(fn, MOUSE_DOWN_INTERVAL)
+    }
+
+    onMouseMoveCanvas (e) {
+        
+        /* COL RESIZE TEST
+        const mousePos = this.getMousePos(e)
+   
+        if (mousePos.y < 45 && mousePos.x > 152 && mousePos.x < 156) {
+            document.body.style.cursor = 'col-resize'
+        } else {
+            document.body.style.cursor = 'auto'
+        }
+        */
     }
 
     onWheelCanvas (e) {
@@ -680,7 +672,7 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
         }) 
 
         // Reset view
-        this.drawWaffle()
+        this.renderWaffle()
     }
 
     renderCell (label, x, y, width, height) {
@@ -700,6 +692,45 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
         this._ctx.fillText(label, x + 10, y + 20)
 
         this._ctx.stroke()
+    }
+
+    renderCellHighlight ({ 
+        columnIdx, 
+        height, 
+        originX, 
+        originY, 
+        relativeX, 
+        relativeY,
+        rowIdx,
+        width
+    }, callback = null) {
+
+        if (this._highlight !== undefined) {
+            this.clearCellHighlight()
+        }
+
+        // Cache highlight
+        this._highlight = { 
+            columnIdx,
+            height,
+            originX,
+            originY,
+            relativeX,
+            relativeY,
+            rowIdx,
+            width
+        }
+console.info('highlight', JSON.stringify(this._highlight, null, 2))
+        // Highlight cell
+        this._ctx.beginPath()
+        this._ctx.rect(relativeX, relativeY, width, height)
+        this._ctx.strokeStyle = '#3896ff'
+        this._ctx.lineWidth = 2
+        this._ctx.stroke()
+
+        if (callback && typeof callback === 'function') {
+            callback
+        }
     }
 
     renderColumnHeader (label, x, y, width, height) {
@@ -812,6 +843,66 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
         return i - 1
     }
 
+    renderWaffle () {
+
+        const { content } = this.props
+        const { columns, rows } = content
+
+        // Clear canvas 
+        this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height)
+
+        // Draw cornerstone
+        this.renderCornerstone(0, 0, ROW_NUMBER_WIDTH, COLUMN_HEADER_HEIGHT)
+
+        // Get size of viewport able to render cells
+        const viewportForCells = this.getViewportForCells()
+
+        // Render column headers and get start/stop range of available columns
+        const colIdxStart = this._waffleOrigin.x
+        const colIdxStop = this.renderColumnsInViewport(columns.slice(), colIdxStart, viewportForCells.width)
+
+        // Render row numbers and get start/stop range of availsble rows
+        const rowIdxStart = this._waffleOrigin.y
+        const rowIdxStop = this.renderRowsInViewport(rows.slice(), rowIdxStart, viewportForCells.height)
+
+        // Cache row/col start/stop
+        Object.assign(this._waffleOrigin, {
+            rowIdxStart,
+            rowIdxStop,
+            colIdxStart,
+            colIdxStop
+        })
+
+        let i = rowIdxStart
+        const len = rowIdxStop
+
+        let rowY = COLUMN_HEADER_HEIGHT
+
+        for (; i <= len; i += 1) {
+
+            // Filter out what will not be in view
+            const row = rows[i].filter((a, i) => i >= colIdxStart && i <= colIdxStop)
+
+            let cellX = ROW_NUMBER_WIDTH
+
+            // Render cells
+            row.forEach((cell, i) => {
+
+                const cellW = columns[colIdxStart + i].width
+
+                this.renderCell(cell, cellX, rowY, cellW, CELL_HEIGHT)
+
+                cellX += cellW
+            })
+
+            rowY += CELL_HEIGHT
+        }
+
+        if (this._highlight !== undefined) {
+            this.renderCellHighlight(this._highlight)
+        }
+    }
+
     scrollDown () {
 
         const { content } = this.props
@@ -859,8 +950,9 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
         }
     }
 
-    scrollRight () {
+    isScrollableRight () {
 
+        let isScrollable = false
         const { content } = this.props
         const { columns } = content
 
@@ -874,18 +966,32 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
             .filter((a, i) => i >= colIdxStart && i <= colIdxStop)
             .reduce((a, b) => a + b.width, 0)
 
-        // Scroll right for partial columns or when 1+ columns to render
         if (renderedColumnsWidth > viewportForCells.width || 
             colIdxStop < columns.length - 1) {
+            isScrollable = true
+        }
 
-            this._waffleOrigin = Object.assign({}, this._waffleOrigin, {
-                x: this._waffleOrigin.x + 1
-            })
+        return isScrollable
+    }
 
-            this.updateViewport()
+    scrollRight (interval = 1) {
 
-        } else if (this._mouseDownInterval !== undefined) {
-            this.clearMouseDownInterval()
+        let i = 0
+        const len = interval
+
+        for (; i < len; i += 1) {
+
+            if (this.isScrollableRight()) {
+
+                this._waffleOrigin = Object.assign({}, this._waffleOrigin, {
+                    x: this._waffleOrigin.x + 1
+                })
+
+                this.updateViewport()
+
+            } else if (this._mouseDownInterval !== undefined) {
+                this.clearMouseDownInterval()
+            }
         }
     }
 
@@ -985,6 +1091,6 @@ console.info('highlight', JSON.stringify(this._highlight, null, 2))
         }
 
         // Redraw canvas
-        this.drawWaffle()
+        this.renderWaffle()
     }
 }
