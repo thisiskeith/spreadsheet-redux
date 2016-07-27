@@ -8,13 +8,13 @@ import {
 
 const defaultRowLen = 25
 const defaultRows = new Array(defaultRowLen)
-//const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
-const emptyRow = ['', '', '', '', '', '', '', '', '', '']
+const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+//const emptyRow = ['', '', '', '', '', '', '', '', '', '']
 let i = 0
 
 while (i < defaultRowLen) {
 
-    const hack = false
+    const hack = true
 
     if (hack) {
         // Hack to add numbers
@@ -31,16 +31,16 @@ while (i < defaultRowLen) {
 export default function spreadsheet(state = {
     cellFocus: [],
     columns: [
-        { height: 30, label: 'A', width: 100 },
-        { height: 30, label: 'B', width: 100 },
-        { height: 30, label: 'C', width: 100 },
-        { height: 30, label: 'D', width: 100 },
-        { height: 30, label: 'E', width: 100 },
-        { height: 30, label: 'F', width: 100 },
-        { height: 30, label: 'G', width: 100 },
-        { height: 30, label: 'H', width: 100 },
-        { height: 30, label: 'I', width: 100 },
-        { height: 30, label: 'J', width: 100 }
+        { height: 42, label: 'A', width: 100 },
+        { height: 42, label: 'B', width: 100 },
+        { height: 42, label: 'C', width: 412 },
+        { height: 42, label: 'D', width: 100 },
+        { height: 42, label: 'E', width: 100 },
+        { height: 42, label: 'F', width: 100 },
+        { height: 42, label: 'G', width: 100 },
+        { height: 42, label: 'H', width: 100 },
+        { height: 42, label: 'I', width: 100 },
+        { height: 42, label: 'J', width: 100 }
     ],
     contextMenu: {
         isVisible: false
