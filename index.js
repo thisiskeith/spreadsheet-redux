@@ -1,6 +1,5 @@
 import 'babel-polyfill'
 import App from './containers/App'
-import App2 from './containers/App2'
 import configureStore from './store/configureStore'
 import React from 'react'
 import { Provider } from 'react-redux'
@@ -10,7 +9,7 @@ const store = configureStore()
 
 render(
     <Provider store={store}>
-        <App2 />
+        <App />
     </Provider>,
     document.getElementById('app')
 )

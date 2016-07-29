@@ -1,8 +1,5 @@
 
-// TODO :: FIX PASTE SINGLE CELL (EASY)
-
 // BUG :: TYPE IN A CELL, USE ARROW KEY, KEEP TYPING - UPDATES WRONG CELL
-// BUG :: DOES NOT RE-RENDER WAFFLE ON PASTE WHEN LAST ROW IS VISIBLE (PROB EASY)
 
 // -- NICE TO HAVE --
 // TODO :: ADD RETINA SUPPORT
@@ -581,7 +578,6 @@ export default class Waffle extends Component {
         }
     }
 
-    // UPDATE
     onPasteWindow (e) {
 
         // Ignore paste if no highlight
@@ -595,52 +591,59 @@ export default class Waffle extends Component {
         e.preventDefault()
 
         // Clipboard data in HTML to support all formating options
-        const pasteData = e.clipboardData.getData('text/html')
+        const pasteDataHTML = e.clipboardData.getData('text/html')
 
         // Pseudo DOM element 
         const el = document.createElement('html')
 
         // Virtual DOM of our paste data
-        el.innerHTML = pasteData
+        el.innerHTML = pasteDataHTML
 
         // Extract table
         var table = el.getElementsByTagName('table')
      
         if (table.length === 0) {
-            console.error('no table found :/')
-            return
-        }
+
+            // Fall back to plain text paste
+            const pasteDataText = e.clipboardData.getData('text')
+            const { columnIdx, rowIdx } = this._highlight
+
+            onSetCellValue(rowIdx, columnIdx, pasteDataText)
+
+        } else {
+
+            // Parse HTML paste
+            var tableRows = table[0].querySelectorAll('tr')
+            
+            if (tableRows.length === 0) {
+                console.error('no table rows found :/')
+                return
+            }
+
+            let { rowIdx } = this._highlight
+
+            // Iterate over table rows 
+            tableRows.forEach(row => {
         
-        var tableRows = table[0].querySelectorAll('tr')
-        
-        if (tableRows.length === 0) {
-            console.error('no table rows found :/')
-            return
+                let { columnIdx } = this._highlight
+                var cols = row.querySelectorAll('td')
+
+                // Iterate over cols
+                cols.forEach(col => {
+          
+                    var re = /<[a-zA-Z0-9\/\s\"\-\;\=\:]+>/g
+
+                    // Strip HTML from column data
+                    var colData = col.innerHTML.replace(re, '')
+
+                    onSetCellValue(rowIdx, columnIdx, colData)
+
+                    columnIdx += 1
+                })
+          
+                rowIdx += 1
+            }) 
         }
-
-        let { rowIdx } = this._highlight
-
-        // Iterate over table rows 
-        tableRows.forEach(row => {
-    
-            let { columnIdx } = this._highlight
-            var cols = row.querySelectorAll('td')
-
-            // Iterate over cols
-            cols.forEach(col => {
-      
-                var re = /<[a-zA-Z0-9\/\s\"\-\;\=\:]+>/g
-
-                // Strip HTML from column data
-                var colData = col.innerHTML.replace(re, '')
-
-                onSetCellValue(rowIdx, columnIdx, colData)
-
-                columnIdx += 1
-            })
-      
-            rowIdx += 1
-        }) 
 
         // Reset view
         this.renderWaffle()

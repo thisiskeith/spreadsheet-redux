@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react'
-import Table from '../components/Table'
+import Waffle from '../components/Waffle'
 import { 
     addRow, 
     selectContextMenuOption,
@@ -22,40 +22,15 @@ class App extends Component {
         return (
             <div>
                 <div className="header row">
-                    {/* Account select drop down 
-                    <div style={{
-                        width: 300,
-                        backgroundColor: 'red',
-                        zIndex: 3,
-                        position: 'fixed',
-                        top: 50,
-                        left: 40
-                    }}>
-                        <div>Row 1</div>
-                        <div>Row 1</div>
-                        <div>Row 1</div>
-                        <div>Row 1</div>
-                        <div>Row 1</div>
-                        <div>Row 1</div>
-                        <div>Row 1</div>
-                    </div>
-                    */}
+
                 </div>
                 <div className="body row">
-                    <Table 
-                        onContextMenu={(isVisible, rowIdx = null, cellIdx = null) => 
-                            dispatch(setContextMenu(isVisible, rowIdx, cellIdx))
-                        }
-                        onSelectContextMenuOption={(option, rowIdx, cellIdx = null) => 
-                            dispatch(selectContextMenuOption(option, rowIdx, cellIdx))
-                        }
-                        onSetCellFocus={(rowNum = null, colNum = null) => 
-                            dispatch(setCellFocus(rowNum, colNum))
-                        }
+                    <Waffle 
+                        content={spreadsheet} 
                         onSetCellValue={(rowNum, colNum, colData, isEditing) => 
                             dispatch(setCellValue(rowNum, colNum, colData, isEditing))
                         }
-                        spreadsheetData={spreadsheet} />
+                    />
                 </div>
             </div>
         )

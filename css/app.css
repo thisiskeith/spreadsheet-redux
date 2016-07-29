@@ -36,14 +36,15 @@ input:focus {
     overflow-y: auto;
 }
 .header {
-    height: 60px;
+    height: 65px;
     top: 0;
     background-color: white;
 }
 .body {
-    top: 60px;
+    top: 65px;
     bottom: 0;
     background-color: white;
+    position: relative;
 }
 .columnLeft {
     width: 50px;
@@ -54,164 +55,113 @@ input:focus {
 }
 
 
+*:focus { outline: 0; }
+body { font-size: 16px; }
 
-
-
-
-
-
-/* Layout x-browser */
-.maxContent {
-    width: intrinsic;
-    width: -moz-max-content;
-    width: -webkit-max-content;
-}
-.noUserSelect {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
-
-/* Context menu */
-.contextMenuRow {
-    background-color: white;
-    cursor: pointer;
-}
-.contextMenuRow:hover {
-    background-color: #efefef;
-}
-
-
-
-/* Spreadsheet */
-.waffleRect {
+.waffle { 
+    width: 420px;height: 140px;
     position: relative;
+    background-color: #e9e9e9;
 }
 
-/* Corner */
-.waffleCornerStone {
-    width: 40px;
-    height: 30px;
+canvas { background-color: orange; }
+
+.cellInput {
     position: absolute;
-    top: 0;
-    left: 0;
-    border: 1px solid #dadada;
-    background-color: #f3f3f3;
-    z-index: 2;
+    background-color: white;
+    border: none;
+    width: 100%;
+    height: 28px;
+    display: none;
+    padding: 0 10px;
+    font-size: 1em;
 }
 
-/* Header */
-.waffleHeaderRect {
-    width: 200px; /* DEFAULT: SET BY BROWSER RESIZE */
-    height: 30px;
-    overflow: hidden;
-    position: absolute;
-    top: 0;
-    left: 40px;
-    background-color: #ddd;
-    z-index: 1;
-}
-    .waffleHeader {
-        width: 100%;
-        height: 30px;
-        white-space: nowrap;
-    }
-        .waffleHeaderCol {
-            width: 160px;
-            height: 30px;
-            border: 1px solid #dadada;
-            border-left: none;
-            font-size: 0.8em;
-            padding: 0;
-            text-align: center;
-            display: inline-block;
-            vertical-align: top;
-            line-height: 30px;
-        }
-
-/* Sidebar */
-.waffleSidebarRect {
-    width: 30px;
-    height: 200px; /* DEFAULT: SET BY BROWSER RESIZE */
-    position: absolute;
-    top: 29px;
-    left: 0;
-    background-color: #ddd;
-    z-index: 1;
-}
-    .waffleSidebar {
-        width: 30px;
-    }
-        .waffleSidebarRow {
-            width: 40px;
-            height: 30px;
-            position: relative;
-            text-align: center;
-            border: 1px solid #dadada;
-            border-bottom: none;
-            font-size: 0.8em;
-            line-height: 30px;
-        }
-
-/* Spreadsheet container */
-.waffleIron {
-    width: 200px;
-    height: 200px;
+.scrollbarX {
     background-color: #efefef;
-    overflow: auto;
     position: absolute;
-    top: 30px;
-    left: 40px;
-    z-index: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 20px;
 }
-/* Spreadsheet scrollbars for Chrome, Safari */
-.waffleIron::-webkit-scrollbar {
-    width: 16px;
-    height: 16px;
-}
-.waffleIron::-webkit-scrollbar-track {
-    background-color: #f3f3f3;
-
-}
-.waffleIron::-webkit-scrollbar-thumb:vertical,
-.waffleIron::-webkit-scrollbar-thumb:horizontal {
-    background-color: #ccc;
-    border: 2px solid #f3f3f3;
-}
-.waffleIron::-webkit-scrollbar-thumb:vertical:hover,
-.waffleIron::-webkit-scrollbar-thumb:horizontal:hover {
-    background: #3896ff;
-}
-.waffleIron::-webkit-scrollbar-thumb:horizontal {
-    background-color: rgba(0,0,0,.2);
-
-}
-.waffleIron::-webkit-scrollbar-corner {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Spreadsheet grid */
-.waffle {
-
-}
-    .waffleRow {
-        width: 100%;
-        height: 30px;
-        white-space: nowrap;
+    .scrollbarXTrack {
+        width: 380px;height: 20px;
+        position: absolute;
+        bottom: 0; 
+        left: 20px;
     }
-    .waffleCol {
-        width: 160px;
-        height: 30px;
-        border: 1px solid #dadada;
-        border-top: none;
-        border-left: none;
-        font-size: 0.8em;
-        padding: 0;
-        background-color: white;
-        display: inline-block;
-        vertical-align: top;
-        position: relative;
+        .scrollbarXThumb {
+            width: 20px;
+            height: 20px;
+            background-color: #ccc;
+            cursor: pointer;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            display: none;
+        }
+    .scrollbarXButtonLeft {
+        width: 20px;height: 20px;
+        background-color: #aaa;
+        cursor: pointer;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        z-index: 1;
     }
+    .scrollbarXButtonRight {
+        width: 20px;height: 20px;
+        background-color: #aaa;
+        cursor: pointer;
+        position: absolute;
+        bottom: 0;
+        right: 20px;
+        z-index: 1;
+    }
+
+.scrollbarY {
+    background-color: #efefef;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 100%;
+}
+    .scrollbarYTrack {
+        width: 20px;height: 100px;
+        position: absolute;
+        top: 20px;
+        right: 0;
+    }
+        .scrollbarYThumb {
+            width: 20px;
+            height: 20px;
+            background-color: #ccc;
+            cursor: pointer;
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: none;
+        }
+    .scrollbarYButtonDown {
+        width: 20px;height: 20px;
+        background-color: #aaa;
+        cursor: pointer;
+        position: absolute;
+        bottom: 20px;
+        right: 0;
+        z-index: 1;
+    }
+    .scrollbarYButtonUp {
+        width: 20px;height: 20px;
+        background-color: #aaa;
+        cursor: pointer;
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 1;
+    }
+
+
+

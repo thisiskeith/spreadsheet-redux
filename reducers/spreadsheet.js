@@ -6,7 +6,7 @@ import {
     SET_CONTEXT_MENU
 } from '../actions'
 
-const defaultRowLen = 40
+const defaultRowLen = 1000
 const defaultRows = new Array(defaultRowLen)
 const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 //const emptyRow = ['', '', '', '', '', '', '', '', '', '']
