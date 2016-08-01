@@ -3,7 +3,7 @@
 // TODO :: ADD LOGIC TO SHOW/HIDE SCROLL CONTROLS (KEEP IN STORE)
 
 // -- NICE TO HAVE --
-// TODO :: ADD RETINA SUPPORT
+// TODO :: ADD RETINA SUPPORT!!!
 
 import equal from 'deep-equal'
 import ContextMenu from './ContextMenu'
