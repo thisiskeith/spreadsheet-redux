@@ -1,9 +1,10 @@
 
-// BUG :: TYPE IN A CELL, USE ARROW KEY, KEEP TYPING - UPDATES WRONG CELL
+// TODO :: RE-ADD RIGHT CLICK MENUS
 
 // -- NICE TO HAVE --
 // TODO :: ADD RETINA SUPPORT
 
+import equal from 'deep-equal'
 import React, { Component } from 'react'
 
 const CELL_WIDTH = 100
@@ -30,7 +31,6 @@ export default class Waffle extends Component {
         this.clearCellHighlight = this.clearCellHighlight.bind(this)
         this.clearMouseDownInterval = this.clearMouseDownInterval.bind(this)
         this.renderWaffle = this.renderWaffle.bind(this)
-        this.isScrollableRight = this.isScrollableRight.bind(this)
         this.onClickCanvas = this.onClickCanvas.bind(this)
         this.onKeyDownWindow = this.onKeyDownWindow.bind(this)
         this.onKeyPressWindow = this.onKeyPressWindow.bind(this)
@@ -84,6 +84,16 @@ export default class Waffle extends Component {
         // Fit content to viewport
         this.updateViewport()
     }
+   
+    // TODO :: FIX DATA MODEL TO NOT NEED THIS
+    componentDidUpdate (prevProps) {
+
+        // Force update on column resize
+        if (!equal(prevProps.content.columns, this.props.content.columns) ||
+            !equal(prevProps.content.rows, this.props.content.rows)) {
+            this.renderWaffle()
+        }
+    }
 
     componentWillUnmount () {
 
@@ -96,7 +106,7 @@ export default class Waffle extends Component {
     render () {
 
         const { onSetCellValue } = this.props
-
+console.warn('did render')
         return (
             <div className='waffle' ref='waffle'>
                 <canvas 
@@ -384,56 +394,80 @@ export default class Waffle extends Component {
             return
         }
 
-        this.renderCellHighlight(rowIdx, columnIdx)
+        this.renderCellHighlight(rowIdx, columnIdx, true)
     }
 
     onKeyDownWindow (e) {
             
         const key = window.Event ? e.which : e.keyCode
+        const { onSetCellValue } = this.props
 
         switch (key) {
 
         case 8: { // backspace
-            //e.preventDefault()
-            //onSetCellValue(selectedRow, selectedCol, '', false)
+
+            // Take no action when cell not selected or let backspace key  
+            // delete text
+            if (this._highlight === undefined ||
+                this._focus !== undefined) {
+                return
+            }
+
+            e.preventDefault()
+
+            const { columnIdx, rowIdx } = this._highlight 
+
+            onSetCellValue(rowIdx, columnIdx, '', false)
             return
         }
 
         case 13: { // return
-/*
-            if (this._focus !== undefined) {
 
-                e.preventDefault()
+            // Take no action when cell not selected or focus on input
+            // NOTE :: to support setting cursor at end of input some hackery
+            // is required ;)
+            if (this._highlight === undefined || this._focus === undefined) {
+                return
+            }
 
-                // Stash input when visible
-                this.stashInput()
+            // Stash input
+            this.stashInput()
 
-                // Reset view
-                this.renderWaffle()
-            }     
-            */
+            const { rows } = this.props.content
+            const { rowIdx, columnIdx } = this._highlight
+
+            const nextRowIdx = rowIdx + 1
+
+            if (nextRowIdx > rows.length - 1) {
+                this.clearCellHighlight()
+                return
+            }
+
+            e.preventDefault()
+
+            this.renderCellHighlight(nextRowIdx, columnIdx, true)
             return
         }
 
         case 27: { // esc
-/*
-            if (this._focus !== undefined) {
 
-                e.preventDefault()
+            if (this._highlight === undefined) {
+                return
+            }
 
-                // Stash input when visible
-                this.stashInput()
+            // Stash input when visible
+            this.stashInput()
 
-                // Reset view
-                this.renderWaffle()
-            }           
-            */
+            this.clearCellHighlight()
             return
         }
 
         case 37: { // left
 
-            if (this._highlight === undefined) {
+            // Take no action when cell not selected or let arrow key navigate 
+            // text input
+            if (this._highlight === undefined ||
+                this._focus !== undefined) {
                 return
             }
 
@@ -447,14 +481,17 @@ export default class Waffle extends Component {
 
             e.preventDefault()
 
-            this.renderCellHighlight(rowIdx, nextColumnIdx)
+            this.renderCellHighlight(rowIdx, nextColumnIdx, true)
             return
         }
 
 
         case 38: { // up
 
-            if (this._highlight === undefined) {
+            // Take no action when cell not selected or let arrow key navigate 
+            // text input
+            if (this._highlight === undefined ||
+                this._focus !== undefined) {
                 return
             }
 
@@ -468,13 +505,13 @@ export default class Waffle extends Component {
 
             e.preventDefault()
 
-            this.renderCellHighlight(nextRowIdx, columnIdx)
+            this.renderCellHighlight(nextRowIdx, columnIdx, true)
             return
         }
 
-        case 9: // tab
-        case 39: { // right
+        case 9: { // tab
 
+            // Take no action when cell not selected
             if (this._highlight === undefined) {
                 return
             }
@@ -490,13 +527,40 @@ export default class Waffle extends Component {
 
             e.preventDefault()
 
-            this.renderCellHighlight(rowIdx, nextColumnIdx)
+            this.renderCellHighlight(rowIdx, nextColumnIdx, true)
+            return
+        }
+
+        case 39: { // right
+
+            // Take no action when cell not selected or let arrow key navigate 
+            // text input
+            if (this._highlight === undefined ||
+                this._focus !== undefined) {
+                return
+            }
+
+            const { columns } = this.props.content
+            const { rowIdx, columnIdx } = this._highlight
+
+            const nextColumnIdx = columnIdx + 1
+
+            if (nextColumnIdx > columns.length - 1) {
+                return
+            }
+
+            e.preventDefault()
+
+            this.renderCellHighlight(rowIdx, nextColumnIdx, true)
             return
         }
 
         case 40: { // down
 
-            if (this._highlight === undefined) {
+            // Take no action when cell not selected or let arrow key navigate 
+            // text input
+            if (this._highlight === undefined ||
+                this._focus !== undefined) {
                 return
             }
 
@@ -511,7 +575,7 @@ export default class Waffle extends Component {
 
             e.preventDefault()
 
-            this.renderCellHighlight(nextRowIdx, columnIdx)
+            this.renderCellHighlight(nextRowIdx, columnIdx, true)
             return
         }
 
@@ -559,7 +623,8 @@ export default class Waffle extends Component {
 
     onWheelCanvas (e) {
 
-        // Get the most expected mouse direction
+        // Get the most expected mouse direction assuming user may have a 
+        // bi-directional scrolling mouse
         const mouseMove = Math.max(Math.abs(e.deltaX), Math.abs(e.deltaY))
         const mouseDir = Math.abs(e.deltaX) === mouseMove ? 'x' : 'y'
 
@@ -655,7 +720,7 @@ export default class Waffle extends Component {
 
         this._ctx.lineWidth = 1
         this._ctx.strokeStyle = '#e0e0e0'
-        this._ctx.rect(x, y, width, height)
+        this._ctx.rect(x - 0.5, y - 0.5, width, height)
         this._ctx.fillStyle = 'white'
         this._ctx.fill()
 
@@ -668,7 +733,7 @@ export default class Waffle extends Component {
         this._ctx.stroke()
     }
 
-    renderCellHighlight (rowIdx, columnIdx) {
+    renderCellHighlight (rowIdx, columnIdx, scrollIntoView = false) {
 
         if (this._highlight !== undefined) {
             this.clearCellHighlight()
@@ -682,13 +747,18 @@ export default class Waffle extends Component {
 
         const cell = this.getCellMetrics(rowIdx, columnIdx)
 
+        // Do not render highlight when OOB
+        if (cell.relativeX < 0 || cell.relativeY < 0) {
+            return
+        }
+
         // Highlight cell
         this._ctx.beginPath()
         this._ctx.rect(
             cell.relativeX + ROW_NUMBER_WIDTH, 
             cell.relativeY + COLUMN_HEADER_HEIGHT, 
-            cell.width, 
-            cell.height
+            cell.width - 1, 
+            cell.height - 1
         )
         this._ctx.strokeStyle = '#3896ff'
         this._ctx.lineWidth = 2
@@ -698,54 +768,58 @@ export default class Waffle extends Component {
         const { columns, rows } = this.props.content
         const viewportForCells = this.getViewportForCells()
 
-        // Scroll X
-        if (cell.columnIdx > this._waffleOrigin.fullColStopIdx) {
+        // Scroll canvas to bring cell into view
+        if (scrollIntoView === true) {
 
-            const getScrollXIntoView = () => {
+            // Scroll X
+            if (cell.columnIdx > this._waffleOrigin.fullColStopIdx) {
 
-                let scrollX = 1
-                let fullCols = this.getFullCols(colStartIdx + scrollX, columns.length - 1, columns, viewportForCells.width)
-                let { fullColStopIdx } = fullCols
+                const getScrollXIntoView = () => {
 
-                while (cell.columnIdx > fullColStopIdx) {
-                    scrollX += 1
-                    fullCols = this.getFullCols(colStartIdx + scrollX, columns.length - 1, columns, viewportForCells.width)
-                    fullColStopIdx = fullCols.fullColStopIdx
+                    let scrollX = 1
+                    let fullCols = this.getFullCols(colStartIdx + scrollX, columns.length - 1, columns, viewportForCells.width)
+                    let { fullColStopIdx } = fullCols
+
+                    while (cell.columnIdx > fullColStopIdx) {
+                        scrollX += 1
+                        fullCols = this.getFullCols(colStartIdx + scrollX, columns.length - 1, columns, viewportForCells.width)
+                        fullColStopIdx = fullCols.fullColStopIdx
+                    }
+            
+                    return scrollX
                 }
+
+                this.scrollRight(getScrollXIntoView())
+
+            } else if (cell.columnIdx < this._waffleOrigin.colStartIdx) {
+
+                this.scrollLeft()
+            }
+
+            // Scroll Y
+            if (cell.rowIdx > this._waffleOrigin.fullRowStopIdx) {
         
-                return scrollX
-            }
+                const getScrollYIntoView = () => {
 
-            this.scrollRight(getScrollXIntoView())
+                    let scrollY = 1
+                    let fullRows = this.getFullRows(rowStartIdx + scrollY, rows.length - 1, viewportForCells.height)
+                    let { fullRowStopIdx } = fullRows
 
-        } else if (cell.columnIdx < this._waffleOrigin.colStartIdx) {
+                    while (cell.rowIdx > fullRowStopIdx) {
+                        scrollY += 1
+                        fullRows = this.getFullRows(rowStartIdx + scrollY, rows.length - 1, viewportForCells.height)
+                        fullRowStopIdx = fullRows.fullRowStopIdx
+                    }
 
-            this.scrollLeft()
-        }
-
-        // Scroll Y
-        if (cell.rowIdx > this._waffleOrigin.fullRowStopIdx) {
-    
-            const getScrollYIntoView = () => {
-
-                let scrollY = 1
-                let fullRows = this.getFullRows(rowStartIdx + scrollY, rows.length - 1, viewportForCells.height)
-                let { fullRowStopIdx } = fullRows
-
-                while (cell.rowIdx > fullRowStopIdx) {
-                    scrollY += 1
-                    fullRows = this.getFullRows(rowStartIdx + scrollY, rows.length - 1, viewportForCells.height)
-                    fullRowStopIdx = fullRows.fullRowStopIdx
+                    return scrollY
                 }
 
-                return scrollY
+                this.scrollDown(getScrollYIntoView())
+
+            } else if (cell.rowIdx < this._waffleOrigin.rowStartIdx) {
+
+                this.scrollUp()
             }
-
-            this.scrollDown(getScrollYIntoView())
-
-        } else if (cell.rowIdx < this._waffleOrigin.rowStartIdx) {
-
-            this.scrollUp()
         }
     }
 
@@ -755,7 +829,7 @@ export default class Waffle extends Component {
 
         this._ctx.lineWidth = 1
         this._ctx.strokeStyle = '#e0e0e0'
-        this._ctx.rect(x, y, width, height)
+        this._ctx.rect(x - 0.5, y - 0.5, width, height)
         this._ctx.fillStyle = '#f6f6f6'
         this._ctx.fill()
 
@@ -805,7 +879,7 @@ export default class Waffle extends Component {
         this._ctx.beginPath()
         this._ctx.lineWidth = 1
         this._ctx.strokeStyle = '#e0e0e0'
-        this._ctx.rect(x, y, width, height)
+        this._ctx.rect(x - 0.5, y - 0.5, width, height)
         this._ctx.fillStyle = '#f6f6f6'
         this._ctx.fill()
         this._ctx.stroke()
@@ -817,7 +891,7 @@ export default class Waffle extends Component {
 
         this._ctx.lineWidth = 1
         this._ctx.strokeStyle = '#e0e0e0'
-        this._ctx.rect(x, y, width, height)
+        this._ctx.rect(x - 0.5, y - 0.5, width, height)
         this._ctx.fillStyle = '#f6f6f6'
         this._ctx.fill()
 
@@ -972,38 +1046,38 @@ export default class Waffle extends Component {
         }
     }
 
-    isScrollableRight () {
-
-        let isScrollable = false
-        const { content } = this.props
-        const { columns } = content
-
-        // Get size of viewport able to render cells
-        const viewportForCells = this.getViewportForCells()
-        const { colStartIdx, colStopIdx } = this._waffleOrigin
-
-        // Get width of all columns rendered in view
-        let renderedColumnsWidth = columns
-            .slice()
-            .filter((a, i) => i >= colStartIdx && i <= colStopIdx)
-            .reduce((a, b) => a + b.width, 0)
-
-        if (renderedColumnsWidth > viewportForCells.width || 
-            colStopIdx < columns.length - 1) {
-            isScrollable = true
-        }
-
-        return isScrollable
-    }
-
     scrollRight (interval = 1) {
+
+        const isScrollableRight = () => {
+
+            let isScrollable = false
+            const { content } = this.props
+            const { columns } = content
+
+            // Get size of viewport able to render cells
+            const viewportForCells = this.getViewportForCells()
+            const { colStartIdx, colStopIdx } = this._waffleOrigin
+
+            // Get width of all columns rendered in view
+            let renderedColumnsWidth = columns
+                .slice()
+                .filter((a, i) => i >= colStartIdx && i <= colStopIdx)
+                .reduce((a, b) => a + b.width, 0)
+
+            if (renderedColumnsWidth > viewportForCells.width || 
+                colStopIdx < columns.length - 1) {
+                isScrollable = true
+            }
+
+            return isScrollable
+        }
 
         let i = 0
         const len = interval
 
         for (; i < len; i += 1) {
 
-            if (this.isScrollableRight()) {
+            if (isScrollableRight()) {
 
                 this._waffleOrigin = Object.assign({}, this._waffleOrigin, {
                     x: this._waffleOrigin.x + 1

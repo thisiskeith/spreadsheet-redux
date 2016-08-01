@@ -5,6 +5,7 @@ import {
     selectContextMenuOption,
     setCellFocus, 
     setCellValue, 
+    setColumnWidth,
     setContextMenu 
 } from '../actions'
 import { connect } from 'react-redux'

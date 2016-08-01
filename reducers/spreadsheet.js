@@ -3,10 +3,11 @@ import {
     SELECT_CONTEXT_MENU_OPTION,
     SET_CELL_FOCUS,
     SET_CELL_VALUE,
+    SET_COLUMN_WIDTH,
     SET_CONTEXT_MENU
 } from '../actions'
 
-const defaultRowLen = 1000
+const defaultRowLen = 50
 const defaultRows = new Array(defaultRowLen)
 const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 //const emptyRow = ['', '', '', '', '', '', '', '', '', '']
@@ -264,6 +265,22 @@ export default function spreadsheet(state = {
                     })
                 }
                 return row
+            })
+        })
+    }
+
+    case SET_COLUMN_WIDTH: {
+
+        const { colIdx, width } = action
+
+        return Object.assign({}, state, {
+            columns: state.columns.map((col, i) => {
+                if (colIdx === i) {
+                    return Object.assign({}, col, {
+                        width
+                    })
+                }
+                return col
             })
         })
     }
