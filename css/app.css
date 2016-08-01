@@ -39,6 +39,8 @@ input:focus {
     height: 65px;
     top: 0;
     background-color: white;
+    z-index: 1;
+    box-shadow: 0 1px 3.92px 0.08px rgba(0, 0, 0, 0.16);
 }
 .body {
     top: 65px;
@@ -71,72 +73,115 @@ canvas { background-color: #efefef; }
     background-color: white;
     border: none;
     width: 100%;
-    height: 28px;
+    height: 27px;
     display: none;
     padding: 0 10px;
     font-size: 1em;
 }
 
 .scrollbarX {
-    background-color: #efefef;
+    background-color: white;
     position: absolute;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 20px;
+    height: 18px;
+    border-top: 1px solid #e0e0e0;
 }
+    .scrollBarXControlsLeft {
+        width: 20px;height: 18px;
+        position: absolute;
+        top: 0;left: 10px;
+    }
+    .scrollBarXControlsRight {
+        width: 20px;height: 18px;
+        position: absolute;
+        top: 0;right: 28px;
+    }
+        .scrollBarXControlButtonLeft {
+            width: 10px;height: 10px;
+            position: absolute;
+            top: 4px;left: 0;
+        }
+        .scrollBarXControlButtonLeft > [class^='arrow'] {
+            position: absolute;
+            left: 0;
+        }
+        .scrollBarXControlButtonRight {
+            width: 10px;height: 10px;
+            position: absolute;
+            top: 4px;right: 0;
+        }
+        .scrollBarXControlButtonRight > [class^='arrow'] {
+            position: absolute;
+            right: 0;
+        }
+    /* NOT USED YET
     .scrollbarXTrack {
-        width: 380px;height: 20px;
+        width: 380px;height: 18px;
         position: absolute;
         bottom: 0; 
         left: 20px;
     }
         .scrollbarXThumb {
-            width: 20px;
-            height: 20px;
-            background-color: #ccc;
+            width: 18px;
+            height: 18px;
+            background-color: cyan;
             cursor: pointer;
             position: absolute;
             bottom: 0;
             left: 0;
             display: none;
         }
-    .scrollbarXButtonLeft {
-        width: 20px;height: 20px;
-        background-color: #aaa;
-        cursor: pointer;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        z-index: 1;
-    }
-    .scrollbarXButtonRight {
-        width: 20px;height: 20px;
-        background-color: #aaa;
-        cursor: pointer;
-        position: absolute;
-        bottom: 0;
-        right: 20px;
-        z-index: 1;
-    }
-
+    */
 .scrollbarY {
-    background-color: #efefef;
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 20px;
+    width: 18px;
     height: 100%;
+    background-color: white;
+    border-left: 1px solid #e0e0e0;
 }
-    .scrollbarYTrack {
-        width: 20px;height: 100px;
+    .scrollBarYControlsUp {
+        width: 18px;height: 20px;
         position: absolute;
-        top: 20px;
+        top: 10px;left: 0;
+    }
+    .scrollBarYControlsDown {
+        width: 18px;height: 20px;
+        position: absolute;
+        bottom: 28px;right: 0;
+    }
+        .scrollBarYControlButtonUp {
+            width: 10px;height: 10px;
+            position: absolute;
+            top: 0;left: 4px;
+        }
+        .scrollBarYControlButtonUp > [class^='arrow'] {
+            position: absolute;
+            top: 0;
+        }
+        .scrollBarYControlButtonDown {
+            width: 10px;height: 10px;
+            position: absolute;
+            bottom: 0;left: 4px;
+        }
+        .scrollBarYControlButtonDown > [class^='arrow'] {
+            position: absolute;
+            bottom: 0;
+        }
+
+    /* NOT USED YET
+    .scrollbarYTrack {
+        width: 18px;height: 100px;
+        position: absolute;
+        top: 18px;
         right: 0;
     }
         .scrollbarYThumb {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             background-color: #ccc;
             cursor: pointer;
             position: absolute;
@@ -144,24 +189,50 @@ canvas { background-color: #efefef; }
             right: 0;
             display: none;
         }
-    .scrollbarYButtonDown {
-        width: 20px;height: 20px;
-        background-color: #aaa;
-        cursor: pointer;
-        position: absolute;
-        bottom: 20px;
-        right: 0;
-        z-index: 1;
-    }
-    .scrollbarYButtonUp {
-        width: 20px;height: 20px;
-        background-color: #aaa;
-        cursor: pointer;
-        position: absolute;
-        top: 0;
-        right: 0;
-        z-index: 1;
-    }
+    */
+.scrollbarCorner {
+    width: 18px;height: 18px;
+    position: absolute;
+    bottom: 0;right: 0;
+    border-top: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+}
 
-
+/* Scrollbar button arrows */
+.arrowDown {
+    width: 0; 
+    height: 0; 
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #2f2f2f;
+    font-size: 0;
+    line-height: 0;
+}
+.arrowLeft {
+    width: 0; 
+    height: 0; 
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-right: 5px solid #2f2f2f;
+    font-size: 0;
+    line-height: 0;
+}
+.arrowRight {
+    width: 0; 
+    height: 0; 
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 5px solid #2f2f2f;
+    font-size: 0;
+    line-height: 0;
+}
+.arrowUp {
+    width: 0; 
+    height: 0; 
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid #2f2f2f;
+    font-size: 0;
+    line-height: 0;
+}
 

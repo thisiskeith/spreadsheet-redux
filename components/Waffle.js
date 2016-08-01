@@ -13,8 +13,8 @@ const COLUMN_HEADER_HEIGHT = 42
 const HEADER_HEIGHT = 65
 const MOUSE_DOWN_INTERVAL = 70
 const ROW_NUMBER_WIDTH = 56
-const SCROLL_TRACK_HEIGHT = 20
-const SCROLL_TRACK_WIDTH = 20
+const SCROLL_TRACK_HEIGHT = 18
+const SCROLL_TRACK_WIDTH = 18
 
 export default class Waffle extends Component {
 
@@ -44,6 +44,8 @@ export default class Waffle extends Component {
         this.renderCornerstone = this.renderCornerstone.bind(this)
         this.renderRowNumber = this.renderRowNumber.bind(this)
         this.renderRowsInViewport = this.renderRowsInViewport.bind(this)
+        this.renderScrollBarXControlButtons = this.renderScrollBarXControlButtons.bind(this)
+        this.renderScrollBarYControlButtons = this.renderScrollBarYControlButtons.bind(this)
         this.scrollDown = this.scrollDown.bind(this)
         this.scrollLeft = this.scrollLeft.bind(this)
         this.scrollRight = this.scrollRight.bind(this)
@@ -60,13 +62,9 @@ export default class Waffle extends Component {
         this._cellInput = this.refs.cellInput
         this._ctx = this._canvas.getContext('2d')
         this._scrollbarX = this.refs.scrollbarX
-        this._scrollbarXButtonLeft = this.refs.scrollbarXButtonLeft
-        this._scrollbarXButtonRight = this.refs.scrollbarXButtonRight
         this._scrollbarXThumb = this.refs.scrollbarXThumb
         this._scrollbarXTrack = this.refs.scrollbarXTrack
         this._scrollbarY = this.refs.scrollbarY
-        this._scrollbarYButtonDown = this.refs.scrollbarYButtonDown
-        this._scrollbarYButtonUp = this.refs.scrollbarYButtonUp
         this._scrollbarYThumb = this.refs.scrollbarYThumb
         this._scrollbarYTrack = this.refs.scrollbarYTrack
         this._waffle = this.refs.waffle
@@ -106,7 +104,7 @@ export default class Waffle extends Component {
     render () {
 
         const { onSetCellValue } = this.props
-console.warn('did render')
+
         return (
             <div className='waffle' ref='waffle'>
                 <canvas 
@@ -126,43 +124,20 @@ console.warn('did render')
                     type='text' 
                 />
                 <div className='scrollbarX' ref='scrollbarX'>
-                    <div 
-                        className='scrollbarXButtonLeft' 
-                        onMouseDown={() => this.onMouseDownInterval(this.scrollLeft)}
-                        onMouseOut={this.clearMouseDownInteLeft}
-                        onMouseUp={this.clearMouseDownInterval}
-                        ref='scrollbarXButtonLeft' 
-                    />
-                    <div 
-                        className='scrollbarXButtonRight' 
-                        onMouseDown={() => this.onMouseDownInterval(this.scrollRight)}
-                        onMouseOut={this.clearMouseDownInteLeft}
-                        onMouseUp={this.clearMouseDownInterval}
-                        ref='scrollbarXButtonRight' 
-                    />
+                    {this.renderScrollBarXControlButtons('scrollBarXControlsLeft')}
+                    {this.renderScrollBarXControlButtons('scrollBarXControlsRight')}
                     <div className='scrollbarXTrack' ref='scrollbarXTrack'>
                         <div className='scrollbarXThumb' ref='scrollbarXThumb' />
                     </div>
                 </div>
                 <div className='scrollbarY' ref='scrollbarY'>
-                    <div 
-                        className='scrollbarYButtonUp' 
-                        onMouseDown={() => this.onMouseDownInterval(this.scrollUp)}
-                        onMouseOut={this.clearMouseDownInteLeft}
-                        onMouseUp={this.clearMouseDownInterval}
-                        ref='scrollbarYButtonUp' 
-                    />
-                    <div 
-                        className='scrollbarYButtonDown' 
-                        onMouseDown={() => this.onMouseDownInterval(this.scrollDown)}
-                        onMouseOut={this.clearMouseDownInteLeft}
-                        onMouseUp={this.clearMouseDownInterval}
-                        ref='scrollbarYButtonDown' 
-                    />
+                    {this.renderScrollBarYControlButtons('scrollBarYControlsUp')}
+                    {this.renderScrollBarYControlButtons('scrollBarYControlsDown')}
                     <div className='scrollbarYTrack' ref='scrollbarYTrack'>
                         <div className='scrollbarYThumb' ref='scrollbarYThumb' />
                     </div>
                 </div>
+                <div className='scrollbarCorner' />
             </div>
         )
     }
@@ -363,7 +338,6 @@ console.warn('did render')
         // OOB : top/left
         if (mousePos.x < ROW_NUMBER_WIDTH 
             || mousePos.y < COLUMN_HEADER_HEIGHT) {
-            console.warn('OOB top/left')
             return
         } 
 
@@ -390,7 +364,6 @@ console.warn('did render')
 
         // OOB : bottom/right
         if (row === undefined || column === undefined) {
-            console.warn('OOB bottom/right')
             return
         }
 
@@ -599,7 +572,7 @@ console.warn('did render')
             this._cellInput.style.display = 'block'
             this._cellInput.style.top = (cell.relativeY + COLUMN_HEADER_HEIGHT + 1) + 'px'
             this._cellInput.style.left = (cell.relativeX + ROW_NUMBER_WIDTH + 1) + 'px'
-            this._cellInput.style.width = (cell.width - 2) + 'px'
+            this._cellInput.style.width = (cell.width - 3) + 'px'
             this._cellInput.focus() 
         }
     }
@@ -748,7 +721,8 @@ console.warn('did render')
         const cell = this.getCellMetrics(rowIdx, columnIdx)
 
         // Do not render highlight when OOB
-        if (cell.relativeX < 0 || cell.relativeY < 0) {
+        if ((cell.relativeX < 0 || cell.relativeY < 0) 
+            && scrollIntoView === false) {
             return
         }
 
@@ -931,6 +905,48 @@ console.warn('did render')
 
         // Return last row index
         return i - 1
+    }
+
+    renderScrollBarXControlButtons (className = '') {
+        return (
+            <div className={className}>
+                <div 
+                    className='scrollBarXControlButtonLeft'
+                    onMouseDown={() => this.onMouseDownInterval(this.scrollLeft)}
+                    onMouseOut={this.clearMouseDownInteLeft}
+                    onMouseUp={this.clearMouseDownInterval}>
+                    <div className='arrowLeft' />
+                </div>
+                <div 
+                    className='scrollBarXControlButtonRight' 
+                    onMouseDown={() => this.onMouseDownInterval(this.scrollRight)}
+                    onMouseOut={this.clearMouseDownInteLeft}
+                    onMouseUp={this.clearMouseDownInterval}>
+                    <div className='arrowRight' />
+                </div>
+            </div>
+        )
+    }
+
+    renderScrollBarYControlButtons (className = '') {
+        return (
+            <div className={className}>
+                <div 
+                    className='scrollBarYControlButtonUp'
+                    onMouseDown={() => this.onMouseDownInterval(this.scrollUp)}
+                    onMouseOut={this.clearMouseDownInteLeft}
+                    onMouseUp={this.clearMouseDownInterval}>
+                    <div className='arrowUp' />
+                </div>
+                <div 
+                    className='scrollBarYControlButtonDown' 
+                    onMouseDown={() => this.onMouseDownInterval(this.scrollDown)}
+                    onMouseOut={this.clearMouseDownInteLeft}
+                    onMouseUp={this.clearMouseDownInterval}>
+                    <div className='arrowDown' />
+                </div>
+            </div>
+        )
     }
 
     renderWaffle () {
@@ -1138,8 +1154,8 @@ console.warn('did render')
         if (maxViewportWidth > contentWidth && this._waffleOrigin.x === 0) {
 
             // Hide scrollbar
-            this._scrollbarXButtonLeft.style.display = 'none'
-            this._scrollbarXButtonRight.style.display = 'none'
+            //this._scrollbarXButtonLeft.style.display = 'none'
+            //this._scrollbarXButtonRight.style.display = 'none'
             //this._scrollbarXThumb.style.display = 'none'
 
             // Canvas
@@ -1148,8 +1164,8 @@ console.warn('did render')
         } else {
 
             // Show / set scroll bars
-            this._scrollbarXButtonLeft.style.display = 'block'
-            this._scrollbarXButtonRight.style.display = 'block'
+            //this._scrollbarXButtonLeft.style.display = 'block'
+            //this._scrollbarXButtonRight.style.display = 'block'
             //this._scrollbarXThumb.style.display = 'block'
             this._scrollbarXTrack.style.width = (window.innerWidth - 60) + 'px' // TODO :: MAKE DYN less scrollbar button left, right, and corner
 
@@ -1164,8 +1180,8 @@ console.warn('did render')
         if (maxViewportHeight > contentHeight && this._waffleOrigin.y === 0) {
 
             // Hide scrollbar
-            this._scrollbarYButtonDown.style.display = 'none'
-            this._scrollbarYButtonUp.style.display = 'none'
+            //this._scrollbarYButtonDown.style.display = 'none'
+            //this._scrollbarYButtonUp.style.display = 'none'
             //this._scrollbarYThumb.style.display = 'none'
 
             // Canvas
@@ -1174,8 +1190,8 @@ console.warn('did render')
         } else {
 
             // Show / set scroll bars
-            this._scrollbarYButtonDown.style.display = 'block'
-            this._scrollbarYButtonUp.style.display = 'block'
+            //this._scrollbarYButtonDown.style.display = 'block'
+            //this._scrollbarYButtonUp.style.display = 'block'
             //this._scrollbarYThumb.style.display = 'block'
             this._scrollbarYTrack.style.height = (window.innerHeight - 125) + 'px' // TODO :: MAKE DYN less scrollbar button top, bottom, corner, header
 
