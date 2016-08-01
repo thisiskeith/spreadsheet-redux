@@ -19,6 +19,7 @@ class App extends Component {
     render () {
 
         const { dispatch, spreadsheet } = this.props
+        const { contextMenu } = spreadsheet
 
         return (
             <div>
@@ -28,8 +29,15 @@ class App extends Component {
                 <div className="body row">
                     <Waffle 
                         content={spreadsheet} 
+                        contextMenu={contextMenu}
+                        onSelectContextMenuOption={() => 
+                            console.log('select context menu option')
+                        }
                         onSetCellValue={(rowNum, colNum, colData, isEditing) => 
                             dispatch(setCellValue(rowNum, colNum, colData, isEditing))
+                        }
+                        onSetContextMenu={(isVisible, rowIdx, columnIdx) => 
+                            dispatch(setContextMenu(isVisible, rowIdx, columnIdx))
                         }
                     />
                 </div>

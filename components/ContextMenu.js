@@ -10,8 +10,8 @@ const ContextMenu = ({
         width: 140,
         backgroundColor: 'white',
         position: 'absolute',
-        top: 10,
-        right: -135,
+        top: 0,
+        right: 0,
         zIndex: 2,
         boxShadow: '3px 3px 5px rgba(0, 0, 0, 0.3)'
     }}>

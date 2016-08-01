@@ -54,11 +54,11 @@ export const setColumnWidth = (colIdx, width) => {
     }
 }
 
-export const setContextMenu = (isVisible, rowIdx, cellIdx = null) => {
+export const setContextMenu = (isVisible, rowIdx, columnIdx = null) => {
     return {
         type: SET_CONTEXT_MENU,
         isVisible,
         rowIdx,
-        cellIdx
+        columnIdx
     }
 }

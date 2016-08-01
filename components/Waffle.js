@@ -1,10 +1,12 @@
 
 // TODO :: RE-ADD RIGHT CLICK MENUS
+// TODO :: ADD LOGIC TO SHOW/HIDE SCROLL CONTROLS (KEEP IN STORE)
 
 // -- NICE TO HAVE --
 // TODO :: ADD RETINA SUPPORT
 
 import equal from 'deep-equal'
+import ContextMenu from './ContextMenu'
 import React, { Component } from 'react'
 
 const CELL_WIDTH = 100
@@ -103,12 +105,21 @@ export default class Waffle extends Component {
 
     render () {
 
-        const { onSetCellValue } = this.props
+        const { 
+            contextMenu, 
+            onSelectContextMenuOption,
+            onSetCellValue,
+            onSetContextMenu
+        } = this.props
 
         return (
             <div className='waffle' ref='waffle'>
                 <canvas 
                     onClick={this.onClickCanvas}
+                    onContextMenu={e => {
+                        e.preventDefault()
+                        onSetContextMenu(true, 0, 0)
+                    }}
                     onMouseMove={this.onMouseMoveCanvas}
                     onWheel={this.onWheelCanvas}
                     ref='canvas' 
@@ -138,6 +149,16 @@ export default class Waffle extends Component {
                     </div>
                 </div>
                 <div className='scrollbarCorner' />
+                {
+                    contextMenu.isVisible === true ?
+                        <ContextMenu 
+                            columnIdx={0}
+                            onSelectContextMenuOption={onSelectContextMenuOption}
+                            options={['a', 'b', 'c']}
+                            rowIdx={0}
+                        />
+                        : null
+                }
             </div>
         )
     }
