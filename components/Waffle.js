@@ -1,17 +1,25 @@
 
-// TODO :: RE-ADD RIGHT CLICK MENUS
 // TODO :: ADD LOGIC TO SHOW/HIDE SCROLL CONTROLS (KEEP IN STORE)
+
+// BUG :: UI NOT UPDATING AFTER PASTE WHEN NEEDING TO ADD NEW ROWS (START w/ 25 ROWS, paste 26 rows)
 
 // -- NICE TO HAVE --
 // TODO :: ADD RETINA SUPPORT!!!
 
-import equal from 'deep-equal'
 import ContextMenu from './ContextMenu'
+import equal from 'deep-equal'
 import React, { Component } from 'react'
+import {
+    CONTEXT_MENU_CELL_OPTIONS,
+    CONTEXT_MENU_ROW_OPTIONS
+} from '../constants'
 
 const CELL_WIDTH = 100
 const CELL_HEIGHT = 30
 const COLUMN_HEADER_HEIGHT = 42
+const CONTEXT_MENU_OPTION_HEIGHT = 30
+const CONTEXT_MENU_PADDING = 20
+const CONTEXT_MENU_WIDTH = 140
 const HEADER_HEIGHT = 65
 const MOUSE_DOWN_INTERVAL = 70
 const ROW_NUMBER_WIDTH = 56
@@ -117,8 +125,86 @@ export default class Waffle extends Component {
                 <canvas 
                     onClick={this.onClickCanvas}
                     onContextMenu={e => {
+
                         e.preventDefault()
-                        onSetContextMenu(true, 0, 0)
+
+                        // TODO :: 
+                        // - determine menu height
+                        // - determine menu position
+
+                        const mousePos = this.getMousePosCanvas(e)
+                        const cell = this.getCellAtMousePos(mousePos)
+
+                        // Ignore OOB
+                        if (cell) {
+
+                            if (typeof cell.rowIdx === 'number' 
+                                && typeof cell.columnIdx === 'number') {
+
+                                // Highlight cell
+                                this.renderCellHighlight(cell.rowIdx, cell.columnIdx)
+
+                                // Reposition context menu when out of view 
+                                const contextMenuHeight = (CONTEXT_MENU_CELL_OPTIONS.length * CONTEXT_MENU_OPTION_HEIGHT) + CONTEXT_MENU_PADDING
+                                const contextMenuX = CONTEXT_MENU_WIDTH + e.clientX
+                                const contextMenuY = contextMenuHeight + e.clientY
+                                let { x, y } = mousePos
+
+                                if (window.innerHeight < contextMenuY) {
+                                    y -= contextMenuHeight
+                                }
+
+                                if (window.innerWidth < contextMenuX) {
+                                    x -= CONTEXT_MENU_WIDTH
+                                }
+
+                                // Render context menu
+                                onSetContextMenu(
+                                    CONTEXT_MENU_CELL_OPTIONS, 
+                                    x, 
+                                    y,
+                                    cell.rowIdx,
+                                    cell.columnIdx
+                                )
+
+                            } else if (typeof cell.rowIdx === 'number') {
+
+                                // Clear cell hightlight when exists
+                                this.clearCellHighlight()
+ 
+                                // Reposition context menu when out of view 
+                                const contextMenuHeight = (CONTEXT_MENU_ROW_OPTIONS.length * CONTEXT_MENU_OPTION_HEIGHT) + CONTEXT_MENU_PADDING
+                                const contextMenuX = CONTEXT_MENU_WIDTH + e.clientX
+                                const contextMenuY = contextMenuHeight + e.clientY
+                                let { x, y } = mousePos
+
+                                if (window.innerHeight < contextMenuY) {
+                                    y -= contextMenuHeight
+                                }
+
+                                if (window.innerWidth < contextMenuX) {
+                                    x -= CONTEXT_MENU_WIDTH
+                                }
+
+                                // Render context menu
+                                onSetContextMenu(
+                                    CONTEXT_MENU_ROW_OPTIONS, 
+                                    x, 
+                                    y,
+                                    cell.rowIdx
+                                )
+
+                            } else {
+    
+                                // Clear cell highlight when exists
+                                this.clearCellHighlight()
+
+                                // Hide context menu when visible
+                                if (contextMenu.options.length > 0) {
+                                    onSetContextMenu()
+                                }
+                            }
+                        }                     
                     }}
                     onMouseMove={this.onMouseMoveCanvas}
                     onWheel={this.onWheelCanvas}
@@ -150,12 +236,10 @@ export default class Waffle extends Component {
                 </div>
                 <div className='scrollbarCorner' />
                 {
-                    contextMenu.isVisible === true ?
-                        <ContextMenu 
-                            columnIdx={0}
-                            onSelectContextMenuOption={onSelectContextMenuOption}
-                            options={['a', 'b', 'c']}
-                            rowIdx={0}
+                    contextMenu.options.length > 0 ?
+                        <ContextMenu
+                            {...contextMenu}
+                            onSelectContextMenuOption={onSelectContextMenuOption} 
                         />
                         : null
                 }
@@ -164,14 +248,63 @@ export default class Waffle extends Component {
     }
 
     clearCellHighlight () {
-        this._highlight = undefined
-        this.renderWaffle()
+        if (this._highlight !== undefined) {
+            this._highlight = undefined
+            this.renderWaffle()
+        }
     }
 
     clearMouseDownInterval () {
         if (this._mouseDownInterval) {
             clearInterval(this._mouseDownInterval)
             this._mouseDownInterval = undefined
+        }
+    }
+ 
+    getCellAtMousePos (mousePos) {
+
+        const { content } = this.props
+        const { columns, rows } = content
+
+        // Get offset for rows/columns out of view from origin (0,0)
+        let columnOffset = 0
+        let i = 0
+        const len = this._waffleOrigin.x
+
+        for (; i < len; i += 1) {
+            columnOffset += columns[i].width
+        }
+
+        let column = null
+        let columnIdx = null 
+        let row = null 
+        let rowIdx = null
+
+        if (mousePos.x >= ROW_NUMBER_WIDTH) {
+
+            const indexByXPos = this.getIndexByXPos(
+                columns.map(c => c.width), 
+                mousePos.x - ROW_NUMBER_WIDTH + columnOffset
+            )
+
+            columnIdx = indexByXPos.idx
+            column = columns[columnIdx]
+        }
+
+        if (mousePos.y >= COLUMN_HEADER_HEIGHT) {
+
+            rowIdx = Math.floor((mousePos.y - COLUMN_HEADER_HEIGHT) / CELL_HEIGHT) + this._waffleOrigin.y
+            row = rows[rowIdx]
+        }
+
+        // OOB :: top/left || bottom/right
+        if (row === null && column === null) {
+            return false
+        }
+
+        return {
+            columnIdx,
+            rowIdx
         }
     }
 
@@ -309,7 +442,7 @@ export default class Waffle extends Component {
         return needle
     }
 
-    getMousePos (e) {
+    getMousePosCanvas (e) {
 
         const rect = this._canvas.getBoundingClientRect()
 
@@ -346,49 +479,31 @@ export default class Waffle extends Component {
 
     onClickCanvas (e) {
 
+        const { contextMenu, onSetContextMenu } = this.props
+
         e.stopPropagation()
 
-        let mousePos = this.getMousePos(e)
+        let mousePos = this.getMousePosCanvas(e)
 
         // Stash input when visible
         this.stashInput()
 
+        // Hide context menu when visible
+        if (contextMenu.options.length > 0) {
+            onSetContextMenu()
+        }
+
         // Reset view
         this.renderWaffle()
 
-        // OOB : top/left
-        if (mousePos.x < ROW_NUMBER_WIDTH 
-            || mousePos.y < COLUMN_HEADER_HEIGHT) {
-            return
-        } 
+        // Get cell at point
+        const cell = this.getCellAtMousePos(mousePos)
 
-        const { content } = this.props
-        const { columns, rows } = content
-
-        // Get offset for rows/columns out of view from origin (0,0)
-        let columnOffset = 0
-        let i = 0
-        const len = this._waffleOrigin.x
-
-        for (; i < len; i += 1) {
-            columnOffset += columns[i].width
+        if (cell && 
+            typeof cell.rowIdx === 'number' && 
+            typeof cell.columnIdx === 'number') {
+            this.renderCellHighlight(cell.rowIdx, cell.columnIdx, true)
         }
-
-        const indexByXPos = this.getIndexByXPos(
-            columns.map(c => c.width), 
-            mousePos.x - ROW_NUMBER_WIDTH + columnOffset
-        )
-        const rowIdx = Math.floor((mousePos.y - COLUMN_HEADER_HEIGHT) / CELL_HEIGHT) + this._waffleOrigin.y
-        const row = rows[rowIdx]
-        const columnIdx = indexByXPos.idx
-        const column = columns[columnIdx]
-
-        // OOB : bottom/right
-        if (row === undefined || column === undefined) {
-            return
-        }
-
-        this.renderCellHighlight(rowIdx, columnIdx, true)
     }
 
     onKeyDownWindow (e) {
@@ -605,7 +720,7 @@ export default class Waffle extends Component {
     onMouseMoveCanvas (e) {
         
         /* COL RESIZE TEST
-        const mousePos = this.getMousePos(e)
+        const mousePos = this.getMousePosCanvas(e)
    
         if (mousePos.y < 45 && mousePos.x > 152 && mousePos.x < 156) {
             document.body.style.cursor = 'col-resize'

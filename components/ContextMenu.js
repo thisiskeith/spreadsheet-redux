@@ -1,32 +1,28 @@
 import React, { PropTypes } from 'react'
 
 const ContextMenu = ({
-    cellIdx,
+    columnIdx,
+    left,
     onSelectContextMenuOption,
     options,
-    rowIdx
+    rowIdx,
+    top
 }) => (
-    <div style={{
-        width: 140,
-        backgroundColor: 'white',
-        position: 'absolute',
-        top: 0,
-        right: 0,
-        zIndex: 2,
-        boxShadow: '3px 3px 5px rgba(0, 0, 0, 0.3)'
-    }}>
+    <div 
+        className="contextMenu"
+        style={{
+            top: `${top}px`,
+            left: `${left}px`,
+        }}
+    >
     {
         options   
         .map((option, i) => <div
-            className="contextMenuRow"
+            className="contextMenuOption"
             key={i}
-            onClick={() => onSelectContextMenuOption(option, rowIdx, cellIdx)}
-            style={{
-                height: 30,
-                lineHeight: '30px',
-                textIndent: 10,
-                textAlign: 'left'
-            }}>
+            onClick={() => 
+                onSelectContextMenuOption(option, rowIdx, columnIdx)
+            }>
                 {option}
             </div>
         )
@@ -35,10 +31,12 @@ const ContextMenu = ({
 )
 
 ContextMenu.propTypes = {
-    cellIdx: PropTypes.number,
+    columnIdx: PropTypes.number,
+    left: PropTypes.number.isRequired,
     onSelectContextMenuOption: PropTypes.func.isRequired,
     options: PropTypes.array.isRequired,
-    rowIdx: PropTypes.number.isRequired
+    rowIdx: PropTypes.number.isRequired,
+    top: PropTypes.number.isRequired
 }
 
 export default ContextMenu

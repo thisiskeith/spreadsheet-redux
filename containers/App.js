@@ -36,8 +36,8 @@ class App extends Component {
                         onSetCellValue={(rowNum, colNum, colData, isEditing) => 
                             dispatch(setCellValue(rowNum, colNum, colData, isEditing))
                         }
-                        onSetContextMenu={(isVisible, rowIdx, columnIdx) => 
-                            dispatch(setContextMenu(isVisible, rowIdx, columnIdx))
+                        onSetContextMenu={(isVisible, left, top, rowIdx, columnIdx) => 
+                            dispatch(setContextMenu(isVisible, left, top, rowIdx, columnIdx))
                         }
                     />
                 </div>

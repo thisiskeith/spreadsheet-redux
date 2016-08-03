@@ -60,7 +60,7 @@ export default function spreadsheet(state = {
         { height: 42, label: 'Z', width: 210 }
     ],
     contextMenu: {
-        isVisible: false
+        options: []
     },
     errors: [
         [12,4]
@@ -287,17 +287,23 @@ export default function spreadsheet(state = {
 
     case SET_CONTEXT_MENU: {
 
-        const { cellIdx, isVisible, rowIdx } = action
+        const { 
+            options,
+            left,
+            top,
+            rowIdx,
+            columnIdx
+        } = action
 
         return Object.assign({}, state, {
             cellFocus: [],
-            contextMenu: isVisible === true ?
-                Object.assign({}, state.contextMenu, {
-                    cellIdx,
-                    isVisible,
-                    rowIdx
-                })
-                : false
+            contextMenu: Object.assign({}, state.contextMenu, {
+                columnIdx,
+                options,
+                left,
+                rowIdx,
+                top
+            })
         })
     }
         

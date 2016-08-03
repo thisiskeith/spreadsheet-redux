@@ -236,3 +236,25 @@ canvas { background-color: #efefef; }
     line-height: 0;
 }
 
+/* Context menu */
+.contextMenu {
+    width: 140px;
+    padding: 10px 0;
+    background-color: white;
+    position: absolute;
+    z-index: 2;
+    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+    font-size: 0.8em;
+}
+    .contextMenuOption {
+        height: 30px;
+        line-height: 30px;
+        text-indent: 10px;
+        text-align: left;
+        cursor: pointer;        
+    }
+    .contextMenuOption:hover {
+        background-color: #efefef;
+    }  
+        
+ 
