@@ -7,7 +7,7 @@ import {
     SET_CONTEXT_MENU
 } from '../actions'
 
-const defaultRowLen = 20
+const defaultRowLen = 25
 const defaultRows = new Array(defaultRowLen)
 //const emptyRow = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 const emptyRow = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
@@ -83,7 +83,7 @@ export default function spreadsheet(state = {
     case SELECT_CONTEXT_MENU_OPTION: {
 
         const contextMenu = {
-            isVisible: false
+            options: []
         }
 
         switch (action.option) {
@@ -102,7 +102,7 @@ export default function spreadsheet(state = {
                 })
             )
 
-            const cellData = rows[action.rowIdx][action.colIdx].slice().trim()
+            const cellData = rows[action.rowIdx][action.columnIdx].slice().trim()
             
             // Return default if no data below current row, or current selection
             // is empty
@@ -116,7 +116,7 @@ export default function spreadsheet(state = {
             for (i; i < endDataRowIdx; i += 1) {
 
                 let nextRow = rows[i + 1].slice()
-                nextRow[action.colIdx] = cellData
+                nextRow[action.columnIdx] = cellData
 
                 rows.splice(i + 1, 1, nextRow)
             }
@@ -131,7 +131,7 @@ export default function spreadsheet(state = {
 
             let rows = state.rows.slice()
             const rowsLen = rows.length
-            const cellData = rows[action.rowIdx][action.colIdx].slice().trim()
+            const cellData = rows[action.rowIdx][action.columnIdx].slice().trim()
        
             // Return default if current selection is empty
             if (cellData === '') {
@@ -144,7 +144,7 @@ export default function spreadsheet(state = {
             }
 
             let nextRow = rows[action.rowIdx + 1].slice()
-            nextRow[action.colIdx] = cellData
+            nextRow[action.columnIdx] = cellData
 
             rows.splice(action.rowIdx + 1, 1, nextRow)
 
@@ -186,6 +186,7 @@ export default function spreadsheet(state = {
                 rows
             })
 
+        // TODO :: FIX - NOT WORKING
         case 'Duplicate row':
             return Object.assign({}, state, {
                 contextMenu,
@@ -231,7 +232,7 @@ export default function spreadsheet(state = {
         return Object.assign({}, state, {
             cellFocus,
             contextMenu: {
-                isVisible: false
+                options: []
             },
             isCellEditing: false
         })

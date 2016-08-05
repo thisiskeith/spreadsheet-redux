@@ -18,8 +18,7 @@ class App extends Component {
 
     render () {
 
-        const { dispatch, spreadsheet } = this.props
-        const { contextMenu } = spreadsheet
+        const { columns, contextMenu, dispatch, rows } = this.props
 
         return (
             <div>
@@ -28,17 +27,21 @@ class App extends Component {
                 </div>
                 <div className="body row">
                     <Waffle 
-                        content={spreadsheet} 
+                        columns={columns}
                         contextMenu={contextMenu}
-                        onSelectContextMenuOption={() => 
-                            console.log('select context menu option')
+                        onSelectContextMenuOption={(option, rowIdx, columnIdx) => 
+                            dispatch(selectContextMenuOption(option, rowIdx, columnIdx))
                         }
                         onSetCellValue={(rowNum, colNum, colData, isEditing) => 
                             dispatch(setCellValue(rowNum, colNum, colData, isEditing))
                         }
+                        onSetColumnWidth={(colIdx, width) => 
+                            dispatch(setColumnWidth(colIdx, width))
+                        }
                         onSetContextMenu={(isVisible, left, top, rowIdx, columnIdx) => 
                             dispatch(setContextMenu(isVisible, left, top, rowIdx, columnIdx))
                         }
+                        rows={rows}
                     />
                 </div>
             </div>
@@ -52,8 +55,16 @@ const mapStateToProps = (state) => {
         spreadsheet
     } = state
 
+    const {
+        columns,
+        contextMenu,
+        rows
+    } = spreadsheet
+
     return {
-        spreadsheet
+        columns,
+        contextMenu,
+        rows
     }
 }
 

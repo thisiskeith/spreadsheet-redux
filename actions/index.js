@@ -12,12 +12,12 @@ export const addRow = () => {
     }
 }
 
-export const selectContextMenuOption = (option, rowIdx, colIdx = null) => {
+export const selectContextMenuOption = (option, rowIdx, columnIdx = null) => {
     return {
         type: SELECT_CONTEXT_MENU_OPTION,
         option,
         rowIdx,
-        colIdx
+        columnIdx
     }
 }
 /*

@@ -1,11 +1,3 @@
-
-// TODO :: ADD LOGIC TO SHOW/HIDE SCROLL CONTROLS (KEEP IN STORE)
-
-// BUG :: UI NOT UPDATING AFTER PASTE WHEN NEEDING TO ADD NEW ROWS (START w/ 25 ROWS, paste 26 rows)
-
-// -- NICE TO HAVE --
-// TODO :: ADD RETINA SUPPORT!!!
-
 import ContextMenu from './ContextMenu'
 import equal from 'deep-equal'
 import React, { Component } from 'react'
@@ -21,6 +13,7 @@ const CONTEXT_MENU_OPTION_HEIGHT = 30
 const CONTEXT_MENU_PADDING = 20
 const CONTEXT_MENU_WIDTH = 140
 const HEADER_HEIGHT = 65
+const MIN_COLUMN_WIDTH = 50
 const MOUSE_DOWN_INTERVAL = 70
 const ROW_NUMBER_WIDTH = 56
 const SCROLL_TRACK_HEIGHT = 18
@@ -36,24 +29,31 @@ export default class Waffle extends Component {
         this._focus = undefined
         this._highlight = undefined
         this._mouseDownInterval = undefined
+        this._resizeTarget = undefined
+        this._resizeTargetDown = false
+        this._resizeTargets = []
 
         // Methods
         this.clearCellHighlight = this.clearCellHighlight.bind(this)
         this.clearMouseDownInterval = this.clearMouseDownInterval.bind(this)
         this.renderWaffle = this.renderWaffle.bind(this)
         this.onClickCanvas = this.onClickCanvas.bind(this)
+        this.onContextMenu = this.onContextMenu.bind(this)
         this.onKeyDownWindow = this.onKeyDownWindow.bind(this)
         this.onKeyPressWindow = this.onKeyPressWindow.bind(this)
+        this.onMouseDownCanvas = this.onMouseDownCanvas.bind(this)
         this.onMouseDownInterval = this.onMouseDownInterval.bind(this)
         this.onMouseMoveCanvas = this.onMouseMoveCanvas.bind(this)
+        this.onMouseUpCanvas = this.onMouseUpCanvas.bind(this)
         this.onPasteWindow = this.onPasteWindow.bind(this)
         this.onWheelCanvas = this.onWheelCanvas.bind(this)
         this.renderCell = this.renderCell.bind(this)
         this.renderColumnHeader = this.renderColumnHeader.bind(this)
-        this.renderColumnsInViewport = this.renderColumnsInViewport.bind(this)
+        this.renderColumnHeadersInViewport = this.renderColumnHeadersInViewport.bind(this)
+        this.renderColumnResize = this.renderColumnResize.bind(this)
         this.renderCornerstone = this.renderCornerstone.bind(this)
         this.renderRowNumber = this.renderRowNumber.bind(this)
-        this.renderRowsInViewport = this.renderRowsInViewport.bind(this)
+        this.renderRowNumbersInViewport = this.renderRowNumbersInViewport.bind(this)
         this.renderScrollBarXControlButtons = this.renderScrollBarXControlButtons.bind(this)
         this.renderScrollBarYControlButtons = this.renderScrollBarYControlButtons.bind(this)
         this.scrollDown = this.scrollDown.bind(this)
@@ -72,11 +72,16 @@ export default class Waffle extends Component {
         this._cellInput = this.refs.cellInput
         this._ctx = this._canvas.getContext('2d')
         this._scrollbarX = this.refs.scrollbarX
+        this._scrollbarXControlsLeft = this.refs.scrollbarXControlsLeft
+        this._scrollbarXControlsRight = this.refs.scrollbarXControlsRight
         this._scrollbarXThumb = this.refs.scrollbarXThumb
         this._scrollbarXTrack = this.refs.scrollbarXTrack
         this._scrollbarY = this.refs.scrollbarY
+        this._scrollbarYControlsDown = this.refs.scrollbarYControlsDown
+        this._scrollbarYControlsUp = this.refs.scrollbarYControlsUp
         this._scrollbarYThumb = this.refs.scrollbarYThumb
         this._scrollbarYTrack = this.refs.scrollbarYTrack
+
         this._waffle = this.refs.waffle
         this._waffleOrigin = { x: 0, y: 0 }
     
@@ -93,14 +98,8 @@ export default class Waffle extends Component {
         this.updateViewport()
     }
    
-    // TODO :: FIX DATA MODEL TO NOT NEED THIS
-    componentDidUpdate (prevProps) {
-
-        // Force update on column resize
-        if (!equal(prevProps.content.columns, this.props.content.columns) ||
-            !equal(prevProps.content.rows, this.props.content.rows)) {
-            this.renderWaffle()
-        }
+    componentDidUpdate () {
+        this.renderWaffle()
     }
 
     componentWillUnmount () {
@@ -124,89 +123,11 @@ export default class Waffle extends Component {
             <div className='waffle' ref='waffle'>
                 <canvas 
                     onClick={this.onClickCanvas}
-                    onContextMenu={e => {
-
-                        e.preventDefault()
-
-                        // TODO :: 
-                        // - determine menu height
-                        // - determine menu position
-
-                        const mousePos = this.getMousePosCanvas(e)
-                        const cell = this.getCellAtMousePos(mousePos)
-
-                        // Ignore OOB
-                        if (cell) {
-
-                            if (typeof cell.rowIdx === 'number' 
-                                && typeof cell.columnIdx === 'number') {
-
-                                // Highlight cell
-                                this.renderCellHighlight(cell.rowIdx, cell.columnIdx)
-
-                                // Reposition context menu when out of view 
-                                const contextMenuHeight = (CONTEXT_MENU_CELL_OPTIONS.length * CONTEXT_MENU_OPTION_HEIGHT) + CONTEXT_MENU_PADDING
-                                const contextMenuX = CONTEXT_MENU_WIDTH + e.clientX
-                                const contextMenuY = contextMenuHeight + e.clientY
-                                let { x, y } = mousePos
-
-                                if (window.innerHeight < contextMenuY) {
-                                    y -= contextMenuHeight
-                                }
-
-                                if (window.innerWidth < contextMenuX) {
-                                    x -= CONTEXT_MENU_WIDTH
-                                }
-
-                                // Render context menu
-                                onSetContextMenu(
-                                    CONTEXT_MENU_CELL_OPTIONS, 
-                                    x, 
-                                    y,
-                                    cell.rowIdx,
-                                    cell.columnIdx
-                                )
-
-                            } else if (typeof cell.rowIdx === 'number') {
-
-                                // Clear cell hightlight when exists
-                                this.clearCellHighlight()
- 
-                                // Reposition context menu when out of view 
-                                const contextMenuHeight = (CONTEXT_MENU_ROW_OPTIONS.length * CONTEXT_MENU_OPTION_HEIGHT) + CONTEXT_MENU_PADDING
-                                const contextMenuX = CONTEXT_MENU_WIDTH + e.clientX
-                                const contextMenuY = contextMenuHeight + e.clientY
-                                let { x, y } = mousePos
-
-                                if (window.innerHeight < contextMenuY) {
-                                    y -= contextMenuHeight
-                                }
-
-                                if (window.innerWidth < contextMenuX) {
-                                    x -= CONTEXT_MENU_WIDTH
-                                }
-
-                                // Render context menu
-                                onSetContextMenu(
-                                    CONTEXT_MENU_ROW_OPTIONS, 
-                                    x, 
-                                    y,
-                                    cell.rowIdx
-                                )
-
-                            } else {
-    
-                                // Clear cell highlight when exists
-                                this.clearCellHighlight()
-
-                                // Hide context menu when visible
-                                if (contextMenu.options.length > 0) {
-                                    onSetContextMenu()
-                                }
-                            }
-                        }                     
-                    }}
+                    onContextMenu={this.onContextMenu}
+                    onMouseDown={this.onMouseDownCanvas}
                     onMouseMove={this.onMouseMoveCanvas}
+                    onMouseOut={this.onMouseUpCanvas}
+                    onMouseUp={this.onMouseUpCanvas}
                     onWheel={this.onWheelCanvas}
                     ref='canvas' 
                 />
@@ -221,15 +142,15 @@ export default class Waffle extends Component {
                     type='text' 
                 />
                 <div className='scrollbarX' ref='scrollbarX'>
-                    {this.renderScrollBarXControlButtons('scrollBarXControlsLeft')}
-                    {this.renderScrollBarXControlButtons('scrollBarXControlsRight')}
+                    {this.renderScrollBarXControlButtons('scrollbarXControlsLeft')}
+                    {this.renderScrollBarXControlButtons('scrollbarXControlsRight')}
                     <div className='scrollbarXTrack' ref='scrollbarXTrack'>
                         <div className='scrollbarXThumb' ref='scrollbarXThumb' />
                     </div>
                 </div>
                 <div className='scrollbarY' ref='scrollbarY'>
-                    {this.renderScrollBarYControlButtons('scrollBarYControlsUp')}
-                    {this.renderScrollBarYControlButtons('scrollBarYControlsDown')}
+                    {this.renderScrollBarYControlButtons('scrollbarYControlsUp')}
+                    {this.renderScrollBarYControlButtons('scrollbarYControlsDown')}
                     <div className='scrollbarYTrack' ref='scrollbarYTrack'>
                         <div className='scrollbarYThumb' ref='scrollbarYThumb' />
                     </div>
@@ -263,8 +184,7 @@ export default class Waffle extends Component {
  
     getCellAtMousePos (mousePos) {
 
-        const { content } = this.props
-        const { columns, rows } = content
+        const { columns, rows } = this.props
 
         // Get offset for rows/columns out of view from origin (0,0)
         let columnOffset = 0
@@ -310,8 +230,7 @@ export default class Waffle extends Component {
 
     getCellMetrics (rowIdx, columnIdx) {
 
-        const { content } = this.props
-        const { columns } = content
+        const { columns } = this.props 
         const column = columns[columnIdx]
 
         const getOriginX = (columnIdx, columns) => {
@@ -405,6 +324,7 @@ export default class Waffle extends Component {
 
             if (sigma + arr[i] < xPos) {
                 sigma += arr[i]
+
             } else {
                 needle = {
                     idx: i,
@@ -417,7 +337,7 @@ export default class Waffle extends Component {
 
         return needle
     }
-
+/*
     getIndexByYPos (arr, yPos) {
 
         let sigma = 0
@@ -441,7 +361,7 @@ export default class Waffle extends Component {
 
         return needle
     }
-
+*/
     getMousePosCanvas (e) {
 
         const rect = this._canvas.getBoundingClientRect()
@@ -451,7 +371,7 @@ export default class Waffle extends Component {
             y: e.clientY - rect.top
         }
     }
-
+/*
     getScrollIntoViewCount (columns, colStartIdx, offsetX, viewportWidth) {
 
         let count = 1
@@ -469,7 +389,7 @@ export default class Waffle extends Component {
             offCanvasXSigma
         }
     }
-
+*/
     getViewportForCells () {
         return {
             width: window.innerWidth - ROW_NUMBER_WIDTH - SCROLL_TRACK_WIDTH,
@@ -503,6 +423,88 @@ export default class Waffle extends Component {
             typeof cell.rowIdx === 'number' && 
             typeof cell.columnIdx === 'number') {
             this.renderCellHighlight(cell.rowIdx, cell.columnIdx, true)
+        }
+    }
+
+    onContextMenu (e) {
+
+        e.preventDefault()
+
+        const mousePos = this.getMousePosCanvas(e)
+        const cell = this.getCellAtMousePos(mousePos)
+
+        // Ignore OOB
+        if (!cell) {
+            return
+        }
+
+        const { contextMenu, onSetContextMenu } = this.props
+
+        if (typeof cell.rowIdx === 'number' 
+            && typeof cell.columnIdx === 'number') {
+
+            // Highlight cell
+            this.renderCellHighlight(cell.rowIdx, cell.columnIdx)
+
+            // Reposition context menu when out of view 
+            const contextMenuHeight = (CONTEXT_MENU_CELL_OPTIONS.length * CONTEXT_MENU_OPTION_HEIGHT) + CONTEXT_MENU_PADDING
+            const contextMenuX = CONTEXT_MENU_WIDTH + e.clientX
+            const contextMenuY = contextMenuHeight + e.clientY
+            let { x, y } = mousePos
+
+            if (window.innerHeight < contextMenuY) {
+                y -= contextMenuHeight
+            }
+
+            if (window.innerWidth < contextMenuX) {
+                x -= CONTEXT_MENU_WIDTH
+            }
+
+            // Render context menu
+            onSetContextMenu(
+                CONTEXT_MENU_CELL_OPTIONS, 
+                x, 
+                y,
+                cell.rowIdx,
+                cell.columnIdx
+            )
+
+        } else if (typeof cell.rowIdx === 'number') {
+
+            // Clear cell hightlight when exists
+            this.clearCellHighlight()
+
+            // Reposition context menu when out of view 
+            const contextMenuHeight = (CONTEXT_MENU_ROW_OPTIONS.length * CONTEXT_MENU_OPTION_HEIGHT) + CONTEXT_MENU_PADDING
+            const contextMenuX = CONTEXT_MENU_WIDTH + e.clientX
+            const contextMenuY = contextMenuHeight + e.clientY
+            let { x, y } = mousePos
+
+            if (window.innerHeight < contextMenuY) {
+                y -= contextMenuHeight
+            }
+
+            if (window.innerWidth < contextMenuX) {
+                x -= CONTEXT_MENU_WIDTH
+            }
+
+            // Render context menu
+            onSetContextMenu(
+                CONTEXT_MENU_ROW_OPTIONS, 
+                x, 
+                y,
+                cell.rowIdx
+            )
+
+        } else {
+
+            // Clear cell highlight when exists
+            this.clearCellHighlight()
+
+            // Hide context menu when visible
+            if (contextMenu.options.length > 0) {
+                onSetContextMenu()
+            }
         }
     }
 
@@ -542,7 +544,7 @@ export default class Waffle extends Component {
             // Stash input
             this.stashInput()
 
-            const { rows } = this.props.content
+            const { rows } = this.props
             const { rowIdx, columnIdx } = this._highlight
 
             const nextRowIdx = rowIdx + 1
@@ -625,7 +627,7 @@ export default class Waffle extends Component {
                 return
             }
 
-            const { columns } = this.props.content
+            const { columns } = this.props
             const { rowIdx, columnIdx } = this._highlight
 
             const nextColumnIdx = columnIdx + 1
@@ -649,7 +651,7 @@ export default class Waffle extends Component {
                 return
             }
 
-            const { columns } = this.props.content
+            const { columns } = this.props
             const { rowIdx, columnIdx } = this._highlight
 
             const nextColumnIdx = columnIdx + 1
@@ -673,7 +675,7 @@ export default class Waffle extends Component {
                 return
             }
 
-            const { rows } = this.props.content
+            const { rows } = this.props
             const { rowIdx, columnIdx } = this._highlight
 
             const nextRowIdx = rowIdx + 1
@@ -713,21 +715,102 @@ export default class Waffle extends Component {
         }
     }
 
+    onMouseDownCanvas (e) {
+
+        // Nothing to listen for
+        if (this._resizeTarget === undefined || this._resizeTarget < 0) {
+            return   
+        }
+
+        // Cache down event
+        this._resizeTargetDown = true
+
+        // Get cell near mouse
+        const cell = this.getCellMetrics(0, this._resizeTarget)
+        const offsetX = cell.relativeX + cell.width + ROW_NUMBER_WIDTH - 0.5
+
+        // Draw resize line
+        this.renderColumnResize(offsetX)
+    }
+
     onMouseDownInterval (fn) {
         this._mouseDownInterval = setInterval(fn, MOUSE_DOWN_INTERVAL)
     }
 
     onMouseMoveCanvas (e) {
-        
-        /* COL RESIZE TEST
+
+        // Nothing to listen for
+        if (this._resizeTargets.length === 0) {
+            return
+        }
+
+        // Resize column
+        if (this._resizeTargetDown === true) {
+
+            const mousePos = this.getMousePosCanvas(e)
+
+            this.renderWaffle()
+
+            this.renderColumnResize(mousePos.x - 0.5)
+            return
+        }
+
         const mousePos = this.getMousePosCanvas(e)
-   
-        if (mousePos.y < 45 && mousePos.x > 152 && mousePos.x < 156) {
+        const isNumberInRange = (num, arr) => {
+          
+            let inRangeIdx = null
+          
+            let i = 0
+            const len = arr.length
+          
+            for (i; i < len; i += 1) {
+                if (num >= (arr[i].x - 2) && num <= (arr[i].x + 2)) {
+                    inRangeIdx = i - 1 + this._waffleOrigin.x
+                    break
+                }
+            }
+         
+            return inRangeIdx 
+        }
+        const xRanges = this._resizeTargets.map(a => [a.x - 2, a.x + 2])
+        const mouseXIdx = isNumberInRange(mousePos.x, this._resizeTargets)
+        const mouseYInRange = mousePos.y >= 0 && mousePos.y <= COLUMN_HEADER_HEIGHT
+
+        if (typeof mouseXIdx === 'number' && mouseYInRange) {
+            this._resizeTarget = mouseXIdx
             document.body.style.cursor = 'col-resize'
         } else {
+            this._resizeTarget = undefined
             document.body.style.cursor = 'auto'
         }
-        */
+    }
+
+    onMouseUpCanvas (e) {
+
+        // Nothing to listen for
+        if (this._resizeTargetDown === false) {
+            return
+        }
+
+        const mousePos = this.getMousePosCanvas(e)
+        const { onSetColumnWidth } = this.props
+
+        // Get cell near mouse
+        const cell = this.getCellMetrics(0, this._resizeTarget)
+        let nextWidth = mousePos.x - cell.relativeX - ROW_NUMBER_WIDTH
+        nextWidth = nextWidth > MIN_COLUMN_WIDTH ? nextWidth : MIN_COLUMN_WIDTH
+
+        // Set column width
+        onSetColumnWidth(this._resizeTarget, nextWidth)
+
+        // Clear cache
+        this._resizeTargetDown = false
+
+        // Redraw canvas
+        this.renderWaffle()
+
+        // Reset cursor
+        document.body.style.cursor = 'auto'
     }
 
     onWheelCanvas (e) {
@@ -820,7 +903,7 @@ export default class Waffle extends Component {
         }
 
         // Reset view
-        this.renderWaffle()
+        this.updateViewport()
     }
 
     renderCell (label, x, y, width, height) {
@@ -875,7 +958,7 @@ export default class Waffle extends Component {
         this._ctx.stroke()
 
         const { colStartIdx, rowStartIdx } = this._waffleOrigin
-        const { columns, rows } = this.props.content
+        const { columns, rows } = this.props
         const viewportForCells = this.getViewportForCells()
 
         // Scroll canvas to bring cell into view
@@ -933,13 +1016,17 @@ export default class Waffle extends Component {
         }
     }
 
-    renderColumnHeader (label, x, y, width, height) {
+    renderColumnHeader (label, x, y, width, height, idx) {
+
+        // Draw clear lines (half pixel fix)
+        x -= 0.5
+        y -= 0.5
 
         this._ctx.beginPath()
 
         this._ctx.lineWidth = 1
         this._ctx.strokeStyle = '#e0e0e0'
-        this._ctx.rect(x - 0.5, y - 0.5, width, height)
+        this._ctx.rect(x, y, width, height)
         this._ctx.fillStyle = '#f6f6f6'
         this._ctx.fill()
 
@@ -950,13 +1037,25 @@ export default class Waffle extends Component {
         this._ctx.fillText(label, x + (width / 2), 28)
 
         this._ctx.stroke()
+
+        // Cache resize target
+        this._resizeTargets.push({
+            x,
+            y,
+            width,
+            height,
+            idx
+        })
     }
 
-    renderColumnsInViewport (columns, offset, viewportWidth) {
+    renderColumnHeadersInViewport (columns, offset, viewportWidth) {
 
         let columnsWidth = 0
         let i = offset
         const len = columns.length
+
+        // Reset resize targets
+        this._resizeTargets = []
 
         for (; i < len; i += 1) {
             
@@ -973,7 +1072,8 @@ export default class Waffle extends Component {
                 columnsWidth + ROW_NUMBER_WIDTH,
                 0,
                 width,
-                height
+                height,
+                i - 1
             ) 
 
             columnsWidth += width
@@ -983,15 +1083,28 @@ export default class Waffle extends Component {
         return i - 1
     }
 
+    renderColumnResize (x) {
+
+        this._ctx.beginPath()
+
+        this._ctx.moveTo(x, 0)
+        this._ctx.lineTo(x, this._canvas.height)
+        this._ctx.lineWidth = 1
+        this._ctx.strokeStyle = '#3896ff'
+
+        this._ctx.stroke()
+    }
+
     renderCornerstone (x, y, width, height) {
 
-        // Draw cornerstone
         this._ctx.beginPath()
+
         this._ctx.lineWidth = 1
         this._ctx.strokeStyle = '#e0e0e0'
         this._ctx.rect(x - 0.5, y - 0.5, width, height)
         this._ctx.fillStyle = '#f6f6f6'
         this._ctx.fill()
+
         this._ctx.stroke()
     }
 
@@ -1014,7 +1127,7 @@ export default class Waffle extends Component {
         this._ctx.stroke()
     }
 
-    renderRowsInViewport (rows, offset, viewportHeight) {
+    renderRowNumbersInViewport (rows, offset, viewportHeight) {
 
         let rowsHeight = 0
         let i = offset
@@ -1045,16 +1158,16 @@ export default class Waffle extends Component {
 
     renderScrollBarXControlButtons (className = '') {
         return (
-            <div className={className}>
+            <div className={className} ref={className}>
                 <div 
-                    className='scrollBarXControlButtonLeft'
+                    className='scrollbarXControlButtonLeft'
                     onMouseDown={() => this.onMouseDownInterval(this.scrollLeft)}
                     onMouseOut={this.clearMouseDownInteLeft}
                     onMouseUp={this.clearMouseDownInterval}>
                     <div className='arrowLeft' />
                 </div>
                 <div 
-                    className='scrollBarXControlButtonRight' 
+                    className='scrollbarXControlButtonRight' 
                     onMouseDown={() => this.onMouseDownInterval(this.scrollRight)}
                     onMouseOut={this.clearMouseDownInteLeft}
                     onMouseUp={this.clearMouseDownInterval}>
@@ -1066,16 +1179,16 @@ export default class Waffle extends Component {
 
     renderScrollBarYControlButtons (className = '') {
         return (
-            <div className={className}>
+            <div className={className} ref={className}>
                 <div 
-                    className='scrollBarYControlButtonUp'
+                    className='scrollbarYControlButtonUp'
                     onMouseDown={() => this.onMouseDownInterval(this.scrollUp)}
                     onMouseOut={this.clearMouseDownInteLeft}
                     onMouseUp={this.clearMouseDownInterval}>
                     <div className='arrowUp' />
                 </div>
                 <div 
-                    className='scrollBarYControlButtonDown' 
+                    className='scrollbarYControlButtonDown' 
                     onMouseDown={() => this.onMouseDownInterval(this.scrollDown)}
                     onMouseOut={this.clearMouseDownInteLeft}
                     onMouseUp={this.clearMouseDownInterval}>
@@ -1087,8 +1200,7 @@ export default class Waffle extends Component {
 
     renderWaffle () {
 
-        const { content } = this.props
-        const { columns, rows } = content
+        const { columns, rows } = this.props
 
         // Clear canvas 
         this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height)
@@ -1101,11 +1213,11 @@ export default class Waffle extends Component {
 
         // Render column headers and get start/stop range of available columns
         const colStartIdx = this._waffleOrigin.x
-        const colStopIdx = this.renderColumnsInViewport(columns.slice(), colStartIdx, viewportForCells.width)
+        const colStopIdx = this.renderColumnHeadersInViewport(columns.slice(), colStartIdx, viewportForCells.width)
 
         // Render row numbers and get start/stop range of availsble rows
         const rowStartIdx = this._waffleOrigin.y
-        const rowStopIdx = this.renderRowsInViewport(rows.slice(), rowStartIdx, viewportForCells.height)
+        const rowStopIdx = this.renderRowNumbersInViewport(rows.slice(), rowStartIdx, viewportForCells.height)
 
         // Cache row/col start/stop
         Object.assign(
@@ -1128,7 +1240,8 @@ export default class Waffle extends Component {
         for (; i <= len; i += 1) {
 
             // Filter out what will not be in view
-            const row = rows[i].filter((a, i) => i >= colStartIdx && i <= colStopIdx)
+            const row = rows[i]
+                .filter((a, i) => i >= colStartIdx && i <= colStopIdx)
 
             let cellX = ROW_NUMBER_WIDTH
 
@@ -1153,8 +1266,7 @@ export default class Waffle extends Component {
 
     scrollDown () {
 
-        const { content } = this.props
-        const { rows } = content
+        const { rows } = this.props
 
         // Get size of viewport able to render cells
         const viewportForCells = this.getViewportForCells()
@@ -1203,8 +1315,7 @@ export default class Waffle extends Component {
         const isScrollableRight = () => {
 
             let isScrollable = false
-            const { content } = this.props
-            const { columns } = content
+            const { columns } = this.props
 
             // Get size of viewport able to render cells
             const viewportForCells = this.getViewportForCells()
@@ -1278,8 +1389,7 @@ export default class Waffle extends Component {
         const maxViewportWidth = window.innerWidth - SCROLL_TRACK_WIDTH
         const maxViewportHeight = window.innerHeight - SCROLL_TRACK_HEIGHT - HEADER_HEIGHT
 
-        const { content } = this.props
-        const { columns, rows } = content
+        const { columns, rows } = this.props
 
         const rowCount = rows.length
 
@@ -1290,9 +1400,9 @@ export default class Waffle extends Component {
         if (maxViewportWidth > contentWidth && this._waffleOrigin.x === 0) {
 
             // Hide scrollbar
-            //this._scrollbarXButtonLeft.style.display = 'none'
-            //this._scrollbarXButtonRight.style.display = 'none'
-            //this._scrollbarXThumb.style.display = 'none'
+            this._scrollbarXControlsLeft.style.display = 'none'
+            this._scrollbarXControlsRight.style.display = 'none'
+            this._scrollbarXThumb.style.display = 'none'
 
             // Canvas
             this._canvas.width = contentWidth
@@ -1300,25 +1410,53 @@ export default class Waffle extends Component {
         } else {
 
             // Show / set scroll bars
-            //this._scrollbarXButtonLeft.style.display = 'block'
-            //this._scrollbarXButtonRight.style.display = 'block'
-            //this._scrollbarXThumb.style.display = 'block'
-            this._scrollbarXTrack.style.width = (window.innerWidth - 60) + 'px' // TODO :: MAKE DYN less scrollbar button left, right, and corner
+            this._scrollbarXControlsLeft.style.display = 'block'
+            this._scrollbarXControlsRight.style.display = 'block'
+            this._scrollbarXThumb.style.display = 'block'
+            this._scrollbarXTrack.style.width = (window.innerWidth - 98) + 'px'
 
             // Canvas
             this._canvas.width = maxViewportWidth
 
             // Scroll bar thumb
-            //this._scrollbarXThumb.style.width = 
+            const scrollbarXThumbWidth = (maxViewportWidth / contentWidth) * 100
+            this._scrollbarXThumb.style.width = scrollbarXThumbWidth + '%'
+
+            // Determine width of canvas out of view to calculate scroll 
+            // thumb position
+            let offsetX = 0
+
+            if (this._waffleOrigin.x > 0) {
+
+                let i = 0
+                const len = this._waffleOrigin.x
+
+                for (; i < len; i += 1) {
+                    offsetX += columns[i].width
+                }
+            }
+    
+            let scrollbarXThumbLeft = (offsetX / contentWidth) * 100
+            const maxLeft = 100 - Math.ceil(scrollbarXThumbWidth)
+
+            if (scrollbarXThumbLeft > maxLeft) {
+                // Set scrollbar to max position
+                this._scrollbarXThumb.style.right = 0
+                this._scrollbarXThumb.style.left = 'auto'
+            } else {
+                // Set scrollbar position
+                this._scrollbarXThumb.style.right = 'auto'
+                this._scrollbarXThumb.style.left = scrollbarXThumbLeft + '%'
+            }
         }
 
         // Height
         if (maxViewportHeight > contentHeight && this._waffleOrigin.y === 0) {
 
             // Hide scrollbar
-            //this._scrollbarYButtonDown.style.display = 'none'
-            //this._scrollbarYButtonUp.style.display = 'none'
-            //this._scrollbarYThumb.style.display = 'none'
+            this._scrollbarYControlsDown.style.display = 'none'
+            this._scrollbarYControlsUp.style.display = 'none'
+            this._scrollbarYThumb.style.display = 'none'
 
             // Canvas
             this._canvas.height = contentHeight
@@ -1326,16 +1464,44 @@ export default class Waffle extends Component {
         } else {
 
             // Show / set scroll bars
-            //this._scrollbarYButtonDown.style.display = 'block'
-            //this._scrollbarYButtonUp.style.display = 'block'
-            //this._scrollbarYThumb.style.display = 'block'
-            this._scrollbarYTrack.style.height = (window.innerHeight - 125) + 'px' // TODO :: MAKE DYN less scrollbar button top, bottom, corner, header
+            this._scrollbarYControlsDown.style.display = 'block'
+            this._scrollbarYControlsUp.style.display = 'block'
+            this._scrollbarYThumb.style.display = 'block'
+            this._scrollbarYTrack.style.height = (window.innerHeight - 163) + 'px'
 
             // Canvas
             this._canvas.height = maxViewportHeight
 
             // Scroll bar thumb
-            //this._scrollbarYThumb.style.height = 
+            const scrollbarYThumbHeight = (maxViewportHeight / contentHeight) * 100
+            this._scrollbarYThumb.style.height = scrollbarYThumbHeight + '%'
+
+            // Determine width of canvas out of view to calculate scroll 
+            // thumb position
+            let offsetY = 0
+
+            if (this._waffleOrigin.y > 0) {
+
+                let i = 0
+                const len = this._waffleOrigin.y
+
+                for (; i < len; i += 1) {
+                    offsetY += CELL_HEIGHT
+                }
+            }
+
+            let scrollbarYThumbTop = (offsetY / contentHeight) * 100
+            const maxTop = 100 - Math.ceil(scrollbarYThumbHeight)
+
+            if (scrollbarYThumbTop > maxTop) {
+                // Set scrollbar to max position
+                this._scrollbarYThumb.style.top = 'auto'
+                this._scrollbarYThumb.style.bottom = 0
+            } else {
+                // Set scrollbar position
+                this._scrollbarYThumb.style.top = scrollbarYThumbTop + '%'
+                this._scrollbarYThumb.style.bottom = 'auto'
+            }
         }
 
         // Redraw canvas
